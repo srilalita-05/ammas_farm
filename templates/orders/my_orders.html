@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}My Orders{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>📋 My Orders</h1>
+    <p>Track all your orders from Amma's Farm</p>
+  </div>
+</div>
+<div class="container">
+  <!-- Search & Filter -->
+  <form method="GET" action="{{ url_for('my_orders') }}" class="orders-filter-bar">
+    <input type="text" name="search" value="{{ search }}" placeholder="Search by product name or order #…" class="form-control" style="flex:1"/>
+    <select name="status" class="form-control" style="width:160px" onchange="this.form.submit()">
+      <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+      {% for s in ORDER_STATUSES %}
+      <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline">🔍</button>
+  </form>
+
+  {% if orders %}
+  {% for order in orders %}
+  <div class="order-card">
+    <div class="order-header">
+      <div>
+        <span class="order-id">Order #{{ order['id'] }}</span>
+        <span class="order-date">{{ order['created_at'] }}</span>
+      </div>
+      <span class="status-badge status-{{ order['order_status']|lower }}">{{ order['order_status'] }}</span>
+    </div>
+    <!-- Progress Tracker -->
+    <div class="progress-tracker">
+      {% set steps = ['Pending','Packed','Shipped','Delivered'] %}
+      {% set si = status_index(order) %}
+      {% for step in steps %}
+      <div class="progress-step {% if si >= loop.index0 %}step-done{% endif %} {% if order['order_status'] == step %}step-current{% endif %}">
+        <div class="step-dot">{% if si > loop.index0 %}✓{% elif order['order_status'] == step %}●{% else %}○{% endif %}</div>
+        <div class="step-label">{{ step }}</div>
+      </div>
+      {% if not loop.last %}<div class="progress-line {% if si > loop.index0 %}line-done{% endif %}"></div>{% endif %}
+      {% endfor %}
+    </div>
+    <div class="order-items">
+      {% for item in order['items'] %}
+      <div class="order-item-row">
+        <span>{{ item['product_name'] }} × {{ item['quantity'] }} {{ item['unit'] }}</span>
+        <span>₹{{ "%.2f"|format(order_item_subtotal(item)) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="order-footer">
+      <div class="order-address">
+        <strong>📍</strong> {{ order['delivery_address'] }}<br/>
+        <strong>📞</strong> {{ order['phone_number'] }}
+        {% if order['notes'] %}<br/><strong>📝</strong> {{ order['notes'] }}{% endif %}
+      </div>
+      <div class="order-total"><strong>₹{{ "%.2f"|format(order['total_amount']) }}</strong></div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">📦</span>
+    <h3>{% if search or status_filter %}No matching orders{% else %}No orders yet{% endif %}</h3>
+    {% if search or status_filter %}
+    <a href="{{ url_for('my_orders') }}" class="btn btn-outline">Clear Filters</a>
+    {% else %}
+    <a href="{{ url_for('shop') }}" class="btn btn-primary">Start Shopping</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

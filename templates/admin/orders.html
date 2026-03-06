@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Manage Orders{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container">
+  <h1>📦 Manage Orders</h1>
+  <p>{{ orders|length }} order{{ 's' if orders|length != 1 }}</p>
+</div></div>
+
+<div class="container">
+  <div class="filter-bar">
+    <div class="filter-pills">
+      <a href="{{ url_for('admin_orders') }}" class="pill {% if not status_filter %}pill-active{% endif %}">All</a>
+      {% for s in ORDER_STATUSES %}
+      <a href="{{ url_for('admin_orders', status=s, search=search) }}"
+         class="pill {% if status_filter == s %}pill-active{% endif %}">{{ s }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if orders %}
+  {% for order in orders %}
+  <div class="order-card">
+    <div class="order-header">
+      <div>
+        <a href="{{ url_for('admin_order_detail', order_id=order['id']) }}" class="order-id">Order #{{ order['id'] }}</a>
+        <span class="text-muted">by <strong>{{ order['username'] }}</strong></span>
+        <span class="order-date">{{ order['created_at'][:16] }}</span>
+      </div>
+      <span class="status-badge status-{{ order['order_status']|lower }}">{{ order['order_status'] }}</span>
+    </div>
+    <div class="order-items">
+      {% for item in order['items'] %}
+      <div class="order-item-row">
+        <span>{{ item['product_name'] }} × {{ item['quantity'] }} {{ item['unit'] }}</span>
+        <span>₹{{ "%.2f"|format(order_item_subtotal(item)) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="order-footer">
+      <div class="order-address">
+        <strong>📍</strong> {{ order['delivery_address'] }}<br/>
+        <strong>📞</strong> {{ order['phone_number'] }}
+        {% if order['notes'] %}<br/><strong>📝</strong> {{ order['notes'] }}{% endif %}
+      </div>
+      <div class="order-actions">
+        <div class="order-total">₹{{ "%.2f"|format(order['total_amount']) }}</div>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <a href="{{ url_for('admin_order_detail', order_id=order['id']) }}" class="btn btn-sm btn-outline">Details</a>
+          <form method="POST" action="{{ url_for('admin_update_order_status', order_id=order['id']) }}" class="status-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <select name="status" class="form-control form-control-sm">
+              {% for s in ORDER_STATUSES %}
+              <option value="{{ s }}" {% if order['order_status'] == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Update</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">📦</span>
+    <h3>No orders{% if status_filter %} with status "{{ status_filter }}"{% endif %}</h3>
+    {% if status_filter %}<a href="{{ url_for('admin_orders') }}" class="btn btn-outline">View All</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

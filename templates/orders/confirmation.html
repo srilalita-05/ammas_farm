@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order['id'] }} Confirmed{% endblock %}
+{% block content %}
+<div class="container" style="max-width:680px;padding-top:2rem;">
+  <div class="confirmation-card">
+    <div class="confirm-hero">
+      <div class="confirm-tick">✓</div>
+      <h1>Order Confirmed!</h1>
+      <p>Order <strong>#{{ order['id'] }}</strong> has been placed successfully.</p>
+      {% if order['email'] %}
+      <p class="text-muted small">A confirmation has been sent to <strong>{{ order['email'] }}</strong></p>
+      {% endif %}
+    </div>
+
+    <!-- Progress tracker -->
+    <div class="progress-tracker" style="background:#fafafa;padding:1.25rem 1.5rem;">
+      {% set steps = ['Pending','Packed','Shipped','Delivered'] %}
+      {% for step in steps %}
+      <div class="progress-step {% if loop.first %}step-current step-done{% endif %}">
+        <div class="step-dot">{% if loop.first %}●{% else %}○{% endif %}</div>
+        <div class="step-label">{{ step }}</div>
+      </div>
+      {% if not loop.last %}<div class="progress-line"></div>{% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Items -->
+    <div class="confirm-section">
+      <h3>🛒 Items Ordered</h3>
+      <table class="confirm-table">
+        <thead><tr><th>Product</th><th>Qty</th><th>Amount</th></tr></thead>
+        <tbody>
+          {% for item in order['items'] %}
+          <tr>
+            <td>{{ item['product_name'] }}</td>
+            <td>{{ item['quantity'] }} {{ item['unit'] }}</td>
+            <td>₹{{ "%.2f"|format(order_item_subtotal(item)) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="total-row"><td colspan="2"><strong>Total</strong></td>
+          <td><strong>₹{{ "%.2f"|format(order['total_amount']) }}</strong></td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Delivery info -->
+    <div class="confirm-section">
+      <h3>🚚 Delivery Details</h3>
+      <div class="confirm-meta">
+        <div class="meta-row"><span>Address</span><span>{{ order['delivery_address'] }}</span></div>
+        <div class="meta-row"><span>Phone</span><span>{{ order['phone_number'] }}</span></div>
+        {% if order['notes'] %}
+        <div class="meta-row"><span>Notes</span><span>{{ order['notes'] }}</span></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="confirm-actions">
+      <a href="{{ url_for('my_orders') }}" class="btn btn-primary">View My Orders</a>
+      <a href="{{ url_for('shop') }}" class="btn btn-outline">Continue Shopping</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

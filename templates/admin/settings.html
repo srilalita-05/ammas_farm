@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Email Settings{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container">
+  <h1>⚙️ Settings</h1>
+  <p>Configure email notifications via Resend</p>
+</div></div>
+
+<div class="container">
+  <div class="form-card" style="max-width:620px;">
+    <form method="POST" action="{{ url_for('admin_settings') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <h3 class="section-title">📧 Resend Email Configuration</h3>
+      <p class="text-muted small" style="margin-bottom:1rem;">
+        Get your API key at <a href="https://resend.com" target="_blank">resend.com</a>.
+        Create a free account, verify your domain, and paste the key below.
+      </p>
+
+      <div class="form-group">
+        <label>Resend API Key</label>
+        <input type="password" name="resend_api_key" class="form-control"
+               value="{{ settings.get('resend_api_key','') }}"
+               placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"/>
+        <p class="text-muted small" style="margin-top:0.3rem">Starts with <code>re_</code></p>
+      </div>
+
+      <div class="form-group">
+        <label>From Email Address</label>
+        <input type="text" name="resend_from_email" class="form-control"
+               value="{{ settings.get('resend_from_email', '') or "Amma's Farm <farm@yourdomain.com>" }}"
+               placeholder="Amma's Farm &lt;farm@yourdomain.com&gt;"/>
+        <p class="text-muted small" style="margin-top:0.3rem">Must be from a verified domain in Resend</p>
+      </div>
+
+      <div class="form-group">
+        <label>Admin Notification Email</label>
+        <input type="email" name="resend_admin_email" class="form-control"
+               value="{{ settings.get('resend_admin_email','') }}"
+               placeholder="you@yourdomain.com"/>
+        <p class="text-muted small" style="margin-top:0.3rem">Where to send new order alerts</p>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" name="email_notifications"
+                 {% if settings.get('email_notifications') == '1' %}checked{% endif %}/>
+          <span>Enable Email Notifications</span>
+        </label>
+        <p class="text-muted small">When enabled: customers get order confirmations, you get new-order alerts.</p>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" name="save" class="btn btn-primary">Save Settings</button>
+        <button type="submit" name="test_email" value="1" class="btn btn-outline">
+          📧 Send Test Email
+        </button>
+      </div>
+    </form>
+
+    <div class="settings-info" style="margin-top:2rem;padding:1rem;background:var(--green-pale);border-radius:8px;">
+      <h4 style="color:var(--green-dark);margin-bottom:0.5rem;">📋 How to set up Resend</h4>
+      <ol style="color:var(--text-muted);font-size:0.85rem;padding-left:1.2rem;line-height:1.8">
+        <li>Go to <a href="https://resend.com" target="_blank">resend.com</a> and create a free account</li>
+        <li>Add and verify your sending domain (or use <code>onboarding@resend.dev</code> for testing)</li>
+        <li>Create an API key from the dashboard</li>
+        <li>Paste the key above and set your "From" address to match your verified domain</li>
+        <li>Enter the admin email where you want new-order alerts sent</li>
+        <li>Enable notifications and click Save</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

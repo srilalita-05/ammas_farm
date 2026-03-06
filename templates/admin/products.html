@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Manage Products{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container"><div class="page-header-row"><div><h1>🌱 Manage Products</h1><p>{{ products|length }} product{{ 's' if products|length != 1 }}</p></div><a href="{{ url_for('admin_add_product') }}" class="btn btn-primary">+ Add Product</a></div></div></div>
+<div class="container">
+  <form method="GET" action="{{ url_for('admin_products') }}" class="search-bar" style="max-width:400px;margin-bottom:1.5rem;">
+    <input type="text" name="search" value="{{ query }}" placeholder="Search products…" class="search-input" />
+    <button type="submit" class="btn btn-outline">🔍</button>
+  </form>
+  {% if products %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Unit</th><th>Seasonal</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for p in products %}
+        <tr class="{% if p['stock_quantity'] == 0 %}row-danger{% elif product_is_low_stock(p) %}row-warning{% endif %}">
+          <td>{% if p['image'] %}<img src="{{ url_for('static', filename='uploads/' + p['image']) }}" class="table-thumb" />{% else %}<div class="table-thumb-placeholder">🌿</div>{% endif %}</td>
+          <td><strong>{{ p['name'] }}</strong></td>
+          <td>₹{{ "%.2f"|format(p['price']) }}</td>
+          <td>{{ p['stock_quantity'] }}{% if p['stock_quantity'] == 0 %}<span class="badge badge-danger">Out</span>{% elif product_is_low_stock(p) %}<span class="badge badge-warning">Low</span>{% endif %}</td>
+          <td>{{ p['unit'] }}</td>
+          <td>{% if p['seasonal_availability'] %}<span class="badge badge-success">✅ Yes</span>{% else %}<span class="badge badge-muted">❌ No</span>{% endif %}</td>
+          <td>{% if product_is_available(p) %}<span class="badge badge-success">Available</span>{% else %}<span class="badge badge-danger">Unavailable</span>{% endif %}</td>
+          <td class="action-col">
+            <a href="{{ url_for('admin_edit_product', product_id=p['id']) }}" class="btn btn-sm btn-outline">Edit</a>
+            <form method="POST" action="{{ url_for('admin_delete_product', product_id=p['id']) }}" style="display:inline;" onsubmit="return confirm('Delete {{ p['name'] }}?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><span class="empty-icon">🌿</span><h3>No products found</h3><a href="{{ url_for('admin_add_product') }}" class="btn btn-primary">Add First Product</a></div>
+  {% endif %}
+</div>
+{% endblock %}

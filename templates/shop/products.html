@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}Shop — Fresh Produce{% endblock %}
+{% block content %}
+
+<!--
+  .shop-page-wrap  → position:relative container that holds EVERYTHING
+  #farm-canvas     → position:absolute, fills entire .shop-page-wrap
+  All other content → position:relative; z-index:1  (sits above canvas)
+-->
+<div class="shop-page-wrap">
+
+  <!-- ══ FULL-PAGE FARM CANVAS ══════════════════════════════════════ -->
+  <canvas id="farm-canvas"></canvas>
+
+  <!-- ══ HERO / SEARCH ═══════════════════════════════════════════════ -->
+  <div class="shop-hero-glass">
+    <div class="hero-content">
+      <h1>🌾 Fresh from Amma's Farm</h1>
+      <p>Seasonal produce, delivered straight to your doorstep</p>
+
+      <form method="GET" action="{{ url_for('shop') }}" class="search-form">
+        <div class="search-bar">
+          <input type="text" name="search" value="{{ query }}"
+                 placeholder="Search vegetables, fruits…" class="search-input"/>
+          <button type="submit" class="btn btn-primary">🔍 Search</button>
+        </div>
+        <div class="filter-pills">
+          <label class="pill {% if available_only %}pill-active{% endif %}">
+            <input type="checkbox" name="available_only" value="true"
+                   {% if available_only %}checked{% endif %} onchange="this.form.submit()"/>
+            In Stock Only
+          </label>
+          <label class="pill {% if seasonal %}pill-active{% endif %}">
+            <input type="checkbox" name="seasonal" value="true"
+                   {% if seasonal %}checked{% endif %} onchange="this.form.submit()"/>
+            Seasonal
+          </label>
+          <select name="ordering" class="sort-select" onchange="this.form.submit()">
+            <option value="name"   {% if ordering=='name'   %}selected{% endif %}>A–Z</option>
+            <option value="price"  {% if ordering=='price'  %}selected{% endif %}>Price ↑</option>
+            <option value="-price" {% if ordering=='-price' %}selected{% endif %}>Price ↓</option>
+          </select>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ CATEGORY TABS ════════════════════════════════════════════════ -->
+  <div class="category-bar category-bar-shop">
+    <div class="container">
+      <div class="cat-tabs">
+        <a href="{{ url_for('shop', search=query, ordering=ordering) }}"
+           class="cat-tab {% if not active_category %}cat-tab-active{% endif %}">All</a>
+        {% for cat in all_categories %}
+        <a href="{{ url_for('shop', category=cat['id'], search=query, ordering=ordering) }}"
+           class="cat-tab {% if active_category == cat['id'] %}cat-tab-active{% endif %}">
+          {{ cat['icon'] }} {{ cat['name'] }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PRODUCT GRID ═════════════════════════════════════════════════ -->
+  <div class="shop-products-area">
+    <div class="container">
+      {% if products %}
+      <p class="results-count">{{ total }} product{{ 's' if total != 1 }}</p>
+      <div class="product-grid">
+        {% for p in products %}
+        <div class="product-card {% if not product_is_available(p) %}product-unavailable{% endif %}">
+          <a href="{{ url_for('product_detail', product_id=p['id']) }}" class="product-img-link">
+            {% if p['image'] %}
+            <img src="{{ url_for('static', filename='uploads/' + p['image']) }}"
+                 alt="{{ p['name'] }}" class="product-img"/>
+            {% else %}
+            <div class="product-img-placeholder">{{ p['category_icon'] or '🌿' }}</div>
+            {% endif %}
+          </a>
+          <div class="product-info">
+            {% if p['category_name'] %}
+            <span class="cat-pill">{{ p['category_icon'] }} {{ p['category_name'] }}</span>
+            {% endif %}
+            {% if product_is_low_stock(p) %}<span class="badge badge-warning">⚠️ Low Stock</span>
+            {% elif p['stock_quantity'] == 0 %}<span class="badge badge-danger">Out of Stock</span>
+            {% elif not p['seasonal_availability'] %}<span class="badge badge-muted">Off Season</span>
+            {% endif %}
+            <h3 class="product-name">
+              <a href="{{ url_for('product_detail', product_id=p['id']) }}">{{ p['name'] }}</a>
+            </h3>
+            <p class="product-price">₹{{ "%.2f"|format(p['price']) }}
+              <span class="unit">/ {{ p['unit'] }}</span></p>
+            <p class="text-muted small">Stock: {{ p['stock_quantity'] }} {{ p['unit'] }}</p>
+
+            {% if product_is_available(p) %}
+              {% if current_user and current_user['role'] != 'admin' %}
+              <form method="POST" action="{{ url_for('add_to_cart') }}" class="add-to-cart-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="product_id" value="{{ p['id'] }}"/>
+                <input type="hidden" name="next" value="{{ url_for('shop') }}"/>
+                <div class="qty-row">
+                  <input type="number" name="quantity" value="1" min="1"
+                         max="{{ p['stock_quantity'] }}" class="qty-input"/>
+                  <button type="submit" class="btn btn-primary btn-sm">Add 🛒</button>
+                </div>
+              </form>
+              {% elif not current_user %}
+              <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm btn-full">Login to Buy</a>
+              {% endif %}
+            {% else %}
+            <button class="btn btn-disabled btn-full" disabled>Unavailable</button>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if total_pages > 1 %}
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="{{ url_for('shop', page=page-1, search=query, ordering=ordering, category=active_category) }}"
+           class="page-btn">← Prev</a>
+        {% endif %}
+        {% for i in range(1, total_pages+1) %}
+        <a href="{{ url_for('shop', page=i, search=query, ordering=ordering, category=active_category) }}"
+           class="page-btn {% if i == page %}page-btn-active{% endif %}">{{ i }}</a>
+        {% endfor %}
+        {% if page < total_pages %}
+        <a href="{{ url_for('shop', page=page+1, search=query, ordering=ordering, category=active_category) }}"
+           class="page-btn">Next →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="empty-state">
+        <span class="empty-icon">🌿</span>
+        <h3>No products found</h3>
+        <p>Try adjusting your search or filters.</p>
+        <a href="{{ url_for('shop') }}" class="btn btn-primary">View All Products</a>
+      </div>
+      {% endif %}
+    </div>
+  </div><!-- /shop-products-area -->
+
+</div><!-- /shop-page-wrap -->
+{% endblock %}

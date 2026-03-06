@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Stock Change Log{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container">
+  <h1>📦 Stock Change Log</h1>
+  <p>Full history of all stock adjustments</p>
+</div></div>
+
+<div class="container">
+  {% if logs %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr>
+        <th>Date</th><th>Product</th><th>Before</th><th>After</th><th>Change</th><th>Admin</th><th>Note</th>
+      </tr></thead>
+      <tbody>
+        {% for log in logs %}
+        {% set diff = log['new_quantity'] - log['old_quantity'] %}
+        <tr class="{% if diff < 0 %}row-danger{% elif diff > 0 %}row-success{% endif %}">
+          <td class="text-muted small">{{ log['created_at'][:16] }}</td>
+          <td><strong>{{ log['product_name'] }}</strong></td>
+          <td>{{ log['old_quantity'] }}</td>
+          <td>{{ log['new_quantity'] }}</td>
+          <td>
+            <span class="badge {% if diff > 0 %}badge-success{% else %}badge-danger{% endif %}">
+              {% if diff > 0 %}+{% endif %}{{ diff }}
+            </span>
+          </td>
+          <td>{{ log['admin_name'] or '—' }}</td>
+          <td class="text-muted small">{{ log['note'] or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">📦</span>
+    <h3>No stock changes recorded yet</h3>
+    <p>Changes will appear here when you edit product stock quantities.</p>
+  </div>
+  {% endif %}
+  <div style="margin-top:1.5rem">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">← Dashboard</a>
+  </div>
+</div>
+{% endblock %}

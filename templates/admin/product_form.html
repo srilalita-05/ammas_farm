@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if product else 'Add' }} Product{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container">
+  <h1>{{ '✏️ Edit' if product else '➕ Add' }} Product</h1>
+</div></div>
+
+<div class="container">
+  <div style="display:grid;grid-template-columns:1fr {% if product and stock_logs %}340px{% endif %};gap:1.5rem;align-items:start">
+
+    <div class="form-card">
+      <form method="POST"
+            action="{{ url_for('admin_edit_product', product_id=product['id']) if product else url_for('admin_add_product') }}"
+            enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="form-group">
+          <label>Product Name <span class="required">*</span></label>
+          <input type="text" name="name" class="form-control" required
+                 value="{{ product['name'] if product else '' }}" placeholder="e.g. Fresh Tomatoes"/>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category_id" class="form-control">
+            <option value="">— No Category —</option>
+            {% for cat in categories %}
+            <option value="{{ cat['id'] }}"
+              {% if product and product['category_id'] == cat['id'] %}selected{% endif %}>
+              {{ cat['icon'] }} {{ cat['name'] }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" class="form-control" rows="3"
+                    placeholder="Describe the product…">{{ product['description'] if product else '' }}</textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price (₹) <span class="required">*</span></label>
+            <input type="number" name="price" class="form-control" step="0.01" min="0" required
+                   value="{{ product['price'] if product else '' }}" placeholder="0.00"/>
+          </div>
+          <div class="form-group">
+            <label>Unit <span class="required">*</span></label>
+            <select name="unit" class="form-control">
+              {% for u in ['kg','g','litre','ml','piece','dozen','bundle','packet'] %}
+              <option value="{{ u }}" {% if product and product['unit'] == u %}selected{% endif %}>{{ u }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Stock Quantity <span class="required">*</span></label>
+            <input type="number" name="stock_quantity" class="form-control" min="0" required
+                   value="{{ product['stock_quantity'] if product else '' }}" placeholder="0"/>
+          </div>
+          <div class="form-group">
+            <label>Low Stock Threshold</label>
+            <input type="number" name="low_stock_threshold" class="form-control" min="0"
+                   value="{{ product['low_stock_threshold'] if product else 10 }}"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Stock Change Note <span class="text-muted">(optional)</span></label>
+          <input type="text" name="stock_note" class="form-control"
+                 placeholder="e.g. Restocked from harvest, sold at market…"/>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="seasonal_availability"
+                   {% if not product or product['seasonal_availability'] %}checked{% endif %}/>
+            <span>Seasonally Available</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>Product Image</label>
+          {% if product and product['image'] %}
+          <div style="margin-bottom:0.5rem">
+            <img src="{{ url_for('static', filename='uploads/' + product['image']) }}"
+                 style="height:80px;border-radius:8px;border:1px solid #ddd"/>
+            <p class="text-muted small">Upload new image to replace</p>
+          </div>
+          {% endif %}
+          <input type="file" name="image" class="form-control" accept="image/*"/>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            {{ 'Save Changes' if product else 'Add Product 🌱' }}
+          </button>
+          <a href="{{ url_for('admin_products') }}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    {% if product and stock_logs %}
+    <div class="form-card">
+      <h3 style="margin-bottom:1rem;color:var(--green-dark);font-size:0.95rem">📦 Recent Stock Changes</h3>
+      {% for log in stock_logs %}
+      {% set diff = log['new_quantity'] - log['old_quantity'] %}
+      <div style="padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:0.82rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.2rem">
+          <span>{{ log['old_quantity'] }} → <strong>{{ log['new_quantity'] }}</strong></span>
+          <span class="badge {% if diff > 0 %}badge-success{% else %}badge-danger{% endif %}">
+            {% if diff > 0 %}+{% endif %}{{ diff }}
+          </span>
+        </div>
+        {% if log['note'] %}<p class="text-muted" style="margin:0">{{ log['note'] }}</p>{% endif %}
+        <p class="text-muted" style="margin:0;font-size:0.75rem">{{ log['created_at'][:16] }} by {{ log['admin_name'] or '?' }}</p>
+      </div>
+      {% endfor %}
+      <a href="{{ url_for('admin_stock_logs') }}" class="btn btn-ghost btn-full"
+         style="margin-top:0.75rem;font-size:0.82rem">View full log →</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

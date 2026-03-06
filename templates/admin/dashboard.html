@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container">
+  <h1>📊 Farm Dashboard</h1>
+  <p>Welcome back, {{ full_name(current_user) }}!</p>
+</div></div>
+
+<div class="container">
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">🌱</div><div class="stat-value">{{ stats.total_products }}</div><div class="stat-label">Products</div></div>
+    <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value">{{ stats.total_orders }}</div><div class="stat-label">Total Orders</div></div>
+    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value">{{ stats.pending_orders }}</div><div class="stat-label">Pending</div></div>
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">{{ stats.total_customers }}</div><div class="stat-label">Customers</div></div>
+    <div class="stat-card stat-card-highlight"><div class="stat-icon">💰</div><div class="stat-value">₹{{ "%.0f"|format(stats.total_revenue) }}</div><div class="stat-label">Revenue</div></div>
+    <div class="stat-card {% if stats.out_of_stock %}stat-card-danger{% endif %}"><div class="stat-icon">❌</div><div class="stat-value">{{ stats.out_of_stock }}</div><div class="stat-label">Out of Stock</div></div>
+  </div>
+
+  <!-- Revenue Chart -->
+  <div class="dashboard-section" style="margin-bottom:1.5rem;">
+    <div class="section-header">
+      <h3>📈 Revenue Trend</h3>
+      <div style="display:flex;gap:0.5rem;">
+        <button onclick="loadChart(7)"  id="btn7"  class="btn btn-sm btn-outline">7 days</button>
+        <button onclick="loadChart(30)" id="btn30" class="btn btn-sm btn-primary">30 days</button>
+      </div>
+    </div>
+    <canvas id="revenueChart" height="100"></canvas>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Low Stock Alerts -->
+    <div class="dashboard-section">
+      <div class="section-header">
+        <h3>⚠️ Low Stock Alerts</h3>
+        <a href="{{ url_for('admin_products') }}" class="btn btn-sm btn-outline">Manage</a>
+      </div>
+      {% if low_stock_products %}
+      <div class="alert-list">
+        {% for p in low_stock_products %}
+        <div class="alert-item">
+          <span class="alert-name">{{ p['name'] }}</span>
+          <span class="badge badge-warning">{{ p['stock_quantity'] }} {{ p['unit'] }}</span>
+          <a href="{{ url_for('admin_edit_product', product_id=p['id']) }}" class="btn btn-sm btn-outline">Edit</a>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">✅ All products fully stocked.</p>
+      {% endif %}
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="dashboard-section">
+      <div class="section-header">
+        <h3>📋 Recent Orders</h3>
+        <a href="{{ url_for('admin_orders') }}" class="btn btn-sm btn-outline">View All</a>
+      </div>
+      {% if recent_orders %}
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td><a href="{{ url_for('admin_order_detail', order_id=order['id']) }}" class="link-underline">#{{ order['id'] }}</a></td>
+            <td>{{ order['username'] }}</td>
+            <td>₹{{ "%.2f"|format(order['total_amount']) }}</td>
+            <td><span class="status-badge status-{{ order['order_status']|lower }}">{{ order['order_status'] }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="text-muted">No orders yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-btn-row">
+      <a href="{{ url_for('admin_add_product') }}" class="btn btn-primary">+ Add Product</a>
+      <a href="{{ url_for('admin_categories') }}" class="btn btn-outline">🏷️ Categories</a>
+      <a href="{{ url_for('admin_stock_logs') }}" class="btn btn-outline">📦 Stock Logs</a>
+      <a href="{{ url_for('admin_customers') }}" class="btn btn-outline">👥 Customers</a>
+      <a href="{{ url_for('admin_settings') }}" class="btn btn-outline">⚙️ Settings</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+let chartInst = null;
+async function loadChart(days) {
+  document.getElementById('btn7').className  = days===7  ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+  document.getElementById('btn30').className = days===30 ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+  const res  = await fetch(`/admin/api/revenue-chart?days=${days}`);
+  const data = await res.json();
+  const labels  = data.map(d => d.day);
+  const revenue = data.map(d => d.revenue);
+  if (chartInst) chartInst.destroy();
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  chartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue (₹)',
+        data: revenue,
+        backgroundColor: 'rgba(74,124,31,0.45)',
+        borderColor: '#4a7c1f',
+        borderWidth: 2,
+        borderRadius: 6,
+        hoverBackgroundColor: 'rgba(74,124,31,0.7)',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `₹${ctx.parsed.y.toFixed(2)}` } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => '₹'+v } },
+        x: { ticks: { maxTicksLimit: 10 } }
+      }
+    }
+  });
+}
+loadChart(30);
+</script>
+{% endblock %}
