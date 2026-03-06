@@ -1,6 +1,7 @@
 """db.py — PostgreSQL (Neon DB) database helpers for Amma's Farm."""
 
 import os
+from datetime import datetime, date
 import psycopg2
 import psycopg2.extras
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,9 +17,21 @@ def get_conn():
     return psycopg2.connect(DATABASE_URL)
 
 
+def _serialize(val):
+    """Convert Python types that Jinja2 can't slice/format into plain strings."""
+    if isinstance(val, datetime):
+        return val.strftime('%Y-%m-%d %H:%M:%S')
+    if isinstance(val, date):
+        return val.strftime('%Y-%m-%d')
+    return val
+
+
 def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
-    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    return [
+        {col: _serialize(val) for col, val in zip(columns, row)}
+        for row in cursor.fetchall()
+    ]
 
 
 def dictfetchone(cursor):
@@ -26,7 +39,9 @@ def dictfetchone(cursor):
         return None
     columns = [col[0] for col in cursor.description]
     row = cursor.fetchone()
-    return dict(zip(columns, row)) if row else None
+    if not row:
+        return None
+    return {col: _serialize(val) for col, val in zip(columns, row)}
 
 
 # ── Schema ────────────────────────────────────────────────────────────────────
@@ -183,7 +198,6 @@ def update_user(user_id, **kwargs):
         return
     conn = get_conn()
     cur = conn.cursor()
-    # Hash password if being updated
     if 'password' in kwargs:
         kwargs['password_hash'] = generate_password_hash(kwargs.pop('password'))
     cols = ', '.join(f"{k}=%s" for k in kwargs)
@@ -346,7 +360,6 @@ def get_products(search='', available_only=False, seasonal=False,
     if where:
         base_sql += " WHERE " + " AND ".join(where)
 
-    # Count
     cur.execute("SELECT COUNT(*) " + base_sql, params)
     total = cur.fetchone()[0]
 
@@ -375,16 +388,12 @@ def update_product(product_id, **kwargs):
         return
     conn = get_conn()
     cur = conn.cursor()
-    kwargs['updated_at'] = 'NOW()'
-    # updated_at is a function call, handle separately
-    set_parts = []
+    kwargs.pop('updated_at', None)
+    set_parts = ["updated_at = NOW()"]
     vals = []
     for k, v in kwargs.items():
-        if k == 'updated_at':
-            set_parts.append("updated_at = NOW()")
-        else:
-            set_parts.append(f"{k} = %s")
-            vals.append(v)
+        set_parts.append(f"{k} = %s")
+        vals.append(v)
     vals.append(product_id)
     cur.execute(f"UPDATE products SET {', '.join(set_parts)} WHERE id=%s", vals)
     conn.commit()
@@ -476,7 +485,6 @@ def get_cart_item_by_product(user_id, product_id):
 
 
 def add_or_update_cart(user_id, product_id, quantity_delta):
-    """Add quantity_delta to existing cart item, or insert new row."""
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("""
@@ -547,7 +555,6 @@ def create_order(user_id, total_amount, delivery_address, phone_number, notes, i
 
 
 def get_order_full(order_id):
-    """Return order dict with nested 'items' list and customer info."""
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("""
@@ -684,11 +691,12 @@ def get_recent_orders(limit=10):
 def get_revenue_chart_data(days=30):
     conn = get_conn()
     cur = conn.cursor()
+    # Use INTERVAL '1 day' * %s — safe way to pass a dynamic interval in psycopg2
     cur.execute("""
         SELECT TO_CHAR(created_at::date, 'Mon DD') AS day,
                COALESCE(SUM(total_amount), 0)      AS revenue
         FROM orders
-        WHERE created_at >= NOW() - INTERVAL '%s days'
+        WHERE created_at >= NOW() - (INTERVAL '1 day' * %s)
           AND order_status != 'Cancelled'
         GROUP BY created_at::date, TO_CHAR(created_at::date, 'Mon DD')
         ORDER BY created_at::date
