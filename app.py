@@ -22,6 +22,45 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 database.init_db()
 
+# ── Allowed email domains ────────────────────────────────────────────
+
+ALLOWED_EMAIL_DOMAINS = {
+    'gmail.com', 'googlemail.com',
+    'outlook.com', 'hotmail.com', 'hotmail.in', 'hotmail.co.uk',
+    'live.com', 'live.in', 'live.co.uk', 'msn.com', 'windowslive.com',
+    'yahoo.com', 'yahoo.in', 'yahoo.co.in', 'yahoo.co.uk', 'yahoo.com.au',
+    'ymail.com', 'rocketmail.com',
+    'icloud.com', 'me.com', 'mac.com',
+    'protonmail.com', 'proton.me',
+    'zoho.com', 'zohomail.com',
+    'aol.com', 'aim.com',
+    'rediffmail.com', 'indiatimes.com', 'sify.com', 'vsnl.com',
+    'tutanota.com', 'tuta.com',
+    'fastmail.com', 'fastmail.fm',
+    'gmx.com', 'gmx.net', 'gmx.de',
+    'web.de', 'mail.com', 'inbox.com',
+    'mail.ru', 'yandex.com', 'yandex.ru',
+    'comcast.net', 'verizon.net', 'att.net', 'cox.net', 'sbcglobal.net',
+}
+
+def is_allowed_email(email: str) -> bool:
+    parts = email.strip().lower().split('@')
+    return len(parts) == 2 and parts[1] in ALLOWED_EMAIL_DOMAINS
+
+def build_address(form) -> str:
+    """Combine individual address fields into one readable string."""
+    house   = form.get('house_no', '').strip()
+    street  = form.get('street', '').strip()
+    city    = form.get('city', '').strip()
+    state   = form.get('state', '').strip()
+    pincode = form.get('pincode', '').strip()
+    parts = [p for p in [house, street, city, state] if p]
+    address = ', '.join(parts)
+    if pincode:
+        address += f' - {pincode}'
+    return address
+
+
 # ── CSRF ──────────────────────────────────────────────────────────────────────
 
 def get_csrf_token():
@@ -253,6 +292,8 @@ def register():
             flash('All fields are required.', 'error')
         elif password != confirm:
             flash('Passwords do not match.', 'error')
+        elif not is_allowed_email(email):
+            flash('Please use a recognised email provider (Gmail, Outlook, Yahoo, etc.).', 'error')
         elif database.get_user_by_username(username):
             flash('Username already taken.', 'error')
         elif database.get_user_by_email(email):
@@ -287,7 +328,8 @@ def logout():
 def profile():
     if request.method == 'POST':
         updates = {k: request.form.get(k,'').strip() for k in
-                   ['first_name','last_name','email','phone_number','address']}
+                   ['first_name','last_name','email','phone_number']}
+        updates['address'] = build_address(request.form)
         new_pw = request.form.get('new_password','')
         if new_pw:
             if not database.verify_password(g.user, request.form.get('current_password','')):
@@ -393,7 +435,7 @@ def checkout():
     if not items: flash('Your cart is empty.','info'); return redirect(url_for('view_cart'))
     total = sum(item_subtotal(i) for i in items)
     if request.method == 'POST':
-        delivery_address = request.form.get('delivery_address','').strip()
+        delivery_address = build_address(request.form)
         phone_number     = request.form.get('phone_number','').strip()
         notes            = request.form.get('notes','').strip()
         if not delivery_address or not phone_number:

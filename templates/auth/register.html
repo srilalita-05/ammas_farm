@@ -8,28 +8,34 @@
       <h2>Join Amma's Farm</h2>
       <p>Create your account to start shopping fresh</p>
     </div>
-    <form method="POST" action="{{ url_for('register') }}">
+    <form method="POST" action="{{ url_for('register') }}" id="registerForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
       <div class="form-group">
         <label for="username">Username <span class="required">*</span></label>
         <input type="text" id="username" name="username" class="form-control"
                placeholder="Choose a username" required autofocus />
       </div>
+
       <div class="form-group">
         <label for="email">Email <span class="required">*</span></label>
         <input type="email" id="email" name="email" class="form-control"
-               placeholder="your@email.com" required />
+               placeholder="you@gmail.com" required />
+        <p id="email-hint" style="font-size:0.8rem;margin-top:0.3rem;display:none"></p>
       </div>
+
       <div class="form-group">
         <label for="password">Password <span class="required">*</span></label>
         <input type="password" id="password" name="password" class="form-control"
                placeholder="Create a strong password" required />
       </div>
+
       <div class="form-group">
         <label for="confirm_password">Confirm Password <span class="required">*</span></label>
         <input type="password" id="confirm_password" name="confirm_password" class="form-control"
                placeholder="Repeat your password" required />
       </div>
+
       <button type="submit" class="btn btn-primary btn-full">Create Account 🌱</button>
     </form>
     <div class="auth-footer">
@@ -37,4 +43,71 @@
     </div>
   </div>
 </div>
+
+<script>
+const ALLOWED_DOMAINS = [
+  /* Google */
+  'gmail.com','googlemail.com',
+  /* Microsoft */
+  'outlook.com','hotmail.com','hotmail.in','hotmail.co.uk','live.com',
+  'live.in','live.co.uk','msn.com','windowslive.com',
+  /* Yahoo */
+  'yahoo.com','yahoo.in','yahoo.co.in','yahoo.co.uk','yahoo.com.au',
+  'ymail.com','rocketmail.com',
+  /* Apple */
+  'icloud.com','me.com','mac.com',
+  /* Others */
+  'protonmail.com','proton.me',
+  'zoho.com','zohomail.com',
+  'aol.com','aim.com',
+  'rediffmail.com',
+  'tutanota.com','tuta.com',
+  'fastmail.com','fastmail.fm',
+  'gmx.com','gmx.net','gmx.de',
+  'web.de','mail.com',
+  'inbox.com',
+  'mail.ru','yandex.com','yandex.ru',
+  /* India-specific */
+  'indiatimes.com','sify.com','vsnl.com',
+  /* ISP / education (common) */
+  'comcast.net','verizon.net','att.net','cox.net','sbcglobal.net',
+];
+
+const emailInput = document.getElementById('email');
+const hint       = document.getElementById('email-hint');
+const form       = document.getElementById('registerForm');
+
+function validateEmailDomain() {
+  const val    = emailInput.value.trim().toLowerCase();
+  const parts  = val.split('@');
+  if (parts.length !== 2 || !parts[1]) {
+    hint.style.display = 'none';
+    emailInput.setCustomValidity('');
+    return;
+  }
+  const domain = parts[1];
+  if (ALLOWED_DOMAINS.includes(domain)) {
+    hint.textContent    = '✅ Valid email provider';
+    hint.style.color    = 'var(--green-dark)';
+    hint.style.display  = 'block';
+    emailInput.setCustomValidity('');
+  } else {
+    hint.textContent    = '❌ Please use a recognised email provider (Gmail, Outlook, Yahoo, etc.)';
+    hint.style.color    = 'var(--red)';
+    hint.style.display  = 'block';
+    emailInput.setCustomValidity('Invalid email provider');
+  }
+}
+
+emailInput.addEventListener('input', validateEmailDomain);
+emailInput.addEventListener('blur',  validateEmailDomain);
+
+form.addEventListener('submit', function(e) {
+  validateEmailDomain();
+  if (!emailInput.checkValidity()) {
+    e.preventDefault();
+    emailInput.reportValidity();
+  }
+});
+</script>
 {% endblock %}
