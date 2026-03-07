@@ -401,7 +401,7 @@ def my_orders():
 @admin_required
 def admin_dashboard():
     stats = {
-        'total_products':  len(database.get_all_products()),
+        'total_products': database.count_products(),
         'total_orders':    database.count_orders(),
         'total_customers': database.count_customers(),
         'total_revenue':   database.get_total_revenue(),
