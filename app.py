@@ -7,6 +7,8 @@ from flask import (Flask, render_template, redirect, url_for, flash,
                    request, session, g, jsonify, abort)
 from werkzeug.utils import secure_filename
 import db as database
+from dotenv import load_dotenv
+load_dotenv()
 
 BASE_DIR      = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
