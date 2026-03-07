@@ -8,9 +8,9 @@ from flask import (Flask, render_template, redirect, url_for, flash,
 from werkzeug.utils import secure_filename
 import db as database
 
-BASE_DIR    = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR      = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
-ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXT   = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'ammas-farm-dev-secret-change-me')
@@ -34,7 +34,6 @@ def validate_csrf():
 @app.before_request
 def csrf_protect():
     if request.method == 'POST':
-        # Skip CSRF check for API endpoints (JSON only)
         if request.path.startswith('/admin/api/'):
             return
         if not validate_csrf():
@@ -51,15 +50,51 @@ def login_user(user):
 def logout_user():
     session.pop('user_id', None)
 
+# ── Single before_request: loads user + cart count + categories
+#    using ONE connection checkout instead of three separate ones ──────────────
+
 @app.before_request
 def load_user():
-    g.user = database.get_user_by_id(session['user_id']) if 'user_id' in session else None
+    g.user       = None
+    g.cart_count = 0
+    g.categories = []
+
+    conn = database.get_conn()
+    try:
+        cur = conn.cursor()
+
+        # 1. Load logged-in user
+        if 'user_id' in session:
+            cur.execute("SELECT * FROM users WHERE id=%s", (session['user_id'],))
+            g.user = database.dictfetchone(cur)
+
+        # 2. Cart count (only for logged-in customers)
+        if g.user:
+            cur.execute(
+                "SELECT COALESCE(SUM(quantity),0) FROM cart_items WHERE user_id=%s",
+                (g.user['id'],)
+            )
+            g.cart_count = int(cur.fetchone()[0])
+
+        # 3. Categories — cached on app object, refreshed every 5 minutes
+        now = time.time()
+        if not hasattr(app, '_cat_cache') or now - app._cat_cache_time > 300:
+            cur.execute("SELECT * FROM categories ORDER BY name")
+            app._cat_cache      = database.dictfetchall(cur)
+            app._cat_cache_time = now
+        g.categories = app._cat_cache
+
+        cur.close()
+    finally:
+        database.release_conn(conn)
 
 @app.context_processor
 def inject_globals():
-    cart_count = database.get_cart_count(g.user['id']) if g.user else 0
-    categories = database.get_all_categories()
-    return dict(current_user=g.user, cart_count=cart_count, all_categories=categories)
+    return dict(
+        current_user   = g.user,
+        cart_count     = g.cart_count,
+        all_categories = g.categories,
+    )
 
 def login_required(f):
     @wraps(f)
@@ -114,7 +149,7 @@ def allowed_file(fn): return '.' in fn and fn.rsplit('.',1)[1].lower() in ALLOWE
 
 def save_upload(file_obj):
     if file_obj and file_obj.filename and allowed_file(file_obj.filename):
-        fn  = secure_filename(file_obj.filename)
+        fn   = secure_filename(file_obj.filename)
         base, ext = os.path.splitext(fn)
         uniq = f"{base}_{int(time.time())}{ext}"
         file_obj.save(os.path.join(UPLOAD_FOLDER, uniq))
@@ -124,7 +159,6 @@ def save_upload(file_obj):
 # ── Email via Resend ──────────────────────────────────────────────────────────
 
 def send_resend_email(to, subject, html_body):
-    """Send email via Resend API using stdlib urllib only."""
     api_key    = database.get_setting('resend_api_key')
     from_email = database.get_setting('resend_from_email')
     enabled    = database.get_setting('email_notifications') == '1'
@@ -151,7 +185,6 @@ def send_resend_email(to, subject, html_body):
         return False, str(e)
 
 def notify_order_placed(order, user):
-    """Send order confirmation to customer + alert to admin."""
     items_html = ''.join(
         f"<tr><td style='padding:6px 12px'>{i['product_name']}</td>"
         f"<td style='padding:6px 12px'>{i['quantity']} {i['unit']}</td>"
@@ -191,7 +224,8 @@ def notify_order_placed(order, user):
           <table style='width:100%;border-collapse:collapse;margin:12px 0'>
             <thead><tr style='background:#2d5016;color:#fff'>
               <th style='padding:6px 10px;text-align:left'>Product</th>
-              <th style='padding:6px 10px'>Qty</th><th style='padding:6px 10px'>Amount</th>
+              <th style='padding:6px 10px'>Qty</th>
+              <th style='padding:6px 10px'>Amount</th>
             </tr></thead>
             <tbody>{items_html}</tbody>
           </table>
@@ -268,17 +302,17 @@ def profile():
 
 @app.route('/shop')
 def shop():
-    q            = request.args.get('search','').strip()
-    available    = request.args.get('available_only') == 'true'
-    seasonal     = request.args.get('seasonal') == 'true'
-    ordering     = request.args.get('ordering','name')
-    page         = request.args.get('page', 1, type=int)
-    category_id  = request.args.get('category', type=int)
-    per_page     = 12
+    q           = request.args.get('search','').strip()
+    available   = request.args.get('available_only') == 'true'
+    seasonal    = request.args.get('seasonal') == 'true'
+    ordering    = request.args.get('ordering','name')
+    page        = request.args.get('page', 1, type=int)
+    category_id = request.args.get('category', type=int)
+    per_page    = 12
     items, total = database.get_products(
         search=q, available_only=available, seasonal=seasonal,
         ordering=ordering, category_id=category_id, page=page, per_page=per_page)
-    total_pages  = max(1, (total + per_page - 1) // per_page)
+    total_pages = max(1, (total + per_page - 1) // per_page)
     return render_template('shop/products.html',
                            products=items, total=total,
                            page=page, total_pages=total_pages,
@@ -312,8 +346,8 @@ def add_to_cart():
     if not product or not product_is_available(product):
         flash(f"{'Product not found' if not product else product['name']+' is unavailable'}.", 'error')
         return redirect(next_url)
-    existing  = database.get_cart_item_by_product(g.user['id'], product_id)
-    new_qty   = (existing['quantity'] if existing else 0) + quantity
+    existing = database.get_cart_item_by_product(g.user['id'], product_id)
+    new_qty  = (existing['quantity'] if existing else 0) + quantity
     if new_qty > product['stock_quantity']:
         flash(f"Only {product['stock_quantity']} {product['unit']} available.", 'error')
         return redirect(next_url)
@@ -324,7 +358,7 @@ def add_to_cart():
 @app.route('/cart/update/<int:item_id>', methods=['POST'])
 @login_required
 def update_cart_item(item_id):
-    item     = database.get_cart_item(item_id, g.user['id'])
+    item    = database.get_cart_item(item_id, g.user['id'])
     if not item: return redirect(url_for('view_cart'))
     quantity = request.form.get('quantity', type=int)
     product  = database.get_product(item['product_id'])
@@ -369,7 +403,6 @@ def checkout():
                 flash(f"Insufficient stock for {item['name']}.","error")
                 return render_template('orders/checkout.html', items=items, total=total)
         order_id = database.create_order(g.user['id'], total, delivery_address, phone_number, notes, items)
-        # Send emails
         order = database.get_order_full(order_id)
         try: notify_order_placed(order, g.user)
         except Exception: pass
@@ -401,7 +434,7 @@ def my_orders():
 @admin_required
 def admin_dashboard():
     stats = {
-        'total_products': database.count_products(),
+        'total_products':  database.count_products(),   # fast COUNT(*) — no more len(get_all_products())
         'total_orders':    database.count_orders(),
         'total_customers': database.count_customers(),
         'total_revenue':   database.get_total_revenue(),
@@ -456,6 +489,9 @@ def admin_add_product():
                                       seasonal_availability=seasonal,
                                       category_id=cat_id, image=img)
         database.log_stock_change(pid, g.user['id'], 0, stock, note or 'Initial stock')
+        # Invalidate category cache so new products show correctly
+        if hasattr(app, '_cat_cache'):
+            app._cat_cache_time = 0
         flash(f'Product "{name}" added! 🌱','success')
         return redirect(url_for('admin_products'))
     return render_template('admin/product_form.html', product=None, categories=categories)
@@ -520,12 +556,20 @@ def admin_categories():
             icon = request.form.get('icon','🌿').strip()
             if name:
                 database.create_category(name, icon)
+                # Invalidate category cache
+                if hasattr(app, '_cat_cache'):
+                    app._cat_cache_time = 0
                 flash(f'Category "{name}" added!','success')
             else:
                 flash('Category name required.','error')
         elif action == 'delete':
             cat_id = request.form.get('cat_id', type=int)
-            if cat_id: database.delete_category(cat_id); flash('Category deleted.','info')
+            if cat_id:
+                database.delete_category(cat_id)
+                # Invalidate category cache
+                if hasattr(app, '_cat_cache'):
+                    app._cat_cache_time = 0
+                flash('Category deleted.','info')
         return redirect(url_for('admin_categories'))
     return render_template('admin/categories.html', categories=database.get_all_categories())
 
@@ -563,7 +607,7 @@ def admin_update_order_status(order_id):
 @login_required
 @admin_required
 def admin_customers():
-    search = request.args.get('search','').strip()
+    search    = request.args.get('search','').strip()
     customers = database.get_all_customers(search=search)
     return render_template('admin/customers.html', customers=customers, search=search)
 
@@ -578,7 +622,6 @@ def admin_settings():
             if key == 'email_notifications':
                 val = '1' if request.form.get('email_notifications') == 'on' else '0'
             database.set_setting(key, val)
-        # Test email if requested
         if request.form.get('test_email'):
             admin_email = database.get_setting('resend_admin_email')
             ok, msg = send_resend_email(

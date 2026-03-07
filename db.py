@@ -9,6 +9,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
+# Allowed columns for updates (whitelists to prevent SQL injection via column names)
+ALLOWED_USER_COLUMNS = {
+    'username', 'email', 'first_name', 'last_name',
+    'phone_number', 'address', 'role', 'password_hash'
+}
+
+ALLOWED_PRODUCT_COLUMNS = {
+    'name', 'description', 'price', 'stock_quantity',
+    'seasonal_availability', 'image', 'unit', 'low_stock_threshold',
+    'category_id'
+}
+
 
 # ── Connection Pool ───────────────────────────────────────────────────────────
 
@@ -108,6 +120,17 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""")
+
+        # Ensure there is a CHECK constraint preventing negative stock_quantity.
+        # If the constraint doesn't exist, add it. Use pg_constraint to detect existence.
+        cur.execute("SELECT 1 FROM pg_constraint WHERE conname = 'stock_non_negative'")
+        if cur.fetchone() is None:
+            try:
+                cur.execute("ALTER TABLE products ADD CONSTRAINT stock_non_negative CHECK (stock_quantity >= 0)")
+            except Exception:
+                # If adding the constraint fails for any reason, continue without crashing init.
+                # (e.g., older PG versions or existing incompatible schema)
+                pass
 
         cur.execute("""
         CREATE TABLE IF NOT EXISTS cart_items (
@@ -228,10 +251,19 @@ def update_user(user_id, **kwargs):
     conn = get_conn()
     try:
         cur = conn.cursor()
+        # Map plain 'password' to 'password_hash' and hash it.
         if 'password' in kwargs:
             kwargs['password_hash'] = generate_password_hash(kwargs.pop('password'))
-        cols = ', '.join(f"{k}=%s" for k in kwargs)
-        vals = list(kwargs.values()) + [user_id]
+
+        # Validate keys against whitelist to avoid SQL injection via column names
+        valid_items = {k: v for k, v in kwargs.items() if k in ALLOWED_USER_COLUMNS}
+        if not valid_items:
+            # Nothing valid to update
+            cur.close()
+            return
+
+        cols = ', '.join(f"{k}=%s" for k in valid_items)
+        vals = list(valid_items.values()) + [user_id]
         cur.execute(f"UPDATE users SET {cols} WHERE id=%s", vals)
         conn.commit()
         cur.close()
@@ -454,10 +486,18 @@ def update_product(product_id, **kwargs):
     conn = get_conn()
     try:
         cur = conn.cursor()
+        # Prevent manual updated_at override; we'll set it ourselves
         kwargs.pop('updated_at', None)
+
+        # Validate keys against whitelist to avoid SQL injection via column names
+        valid_items = {k: v for k, v in kwargs.items() if k in ALLOWED_PRODUCT_COLUMNS}
+        if not valid_items:
+            cur.close()
+            return
+
         set_parts = ["updated_at = NOW()"]
         vals = []
-        for k, v in kwargs.items():
+        for k, v in valid_items.items():
             set_parts.append(f"{k} = %s")
             vals.append(v)
         vals.append(product_id)
@@ -636,9 +676,19 @@ def create_order(user_id, total_amount, delivery_address, phone_number, notes, i
                 VALUES (%s,%s,%s,%s,%s,%s)
             """, (order_id, item['product_id'], item['name'],
                   item['price'], item['quantity'], item['unit']))
+
+            # Defensive stock update: only decrement if there is enough stock left.
             cur.execute("""
-                UPDATE products SET stock_quantity = stock_quantity - %s WHERE id=%s
-            """, (item['quantity'], item['product_id']))
+                UPDATE products
+                SET stock_quantity = stock_quantity - %s
+                WHERE id = %s AND stock_quantity >= %s
+            """, (item['quantity'], item['product_id'], item['quantity']))
+
+            if cur.rowcount == 0:
+                # Not enough stock for this item — rollback and raise so caller can handle.
+                conn.rollback()
+                cur.close()
+                raise ValueError(f"Out of stock for product id {item['product_id']}")
 
         cur.execute("DELETE FROM cart_items WHERE user_id=%s", (user_id,))
         conn.commit()
