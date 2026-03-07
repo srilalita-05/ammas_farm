@@ -3,7 +3,7 @@ services:
     name: ammas-farm
     runtime: python
     buildCommand: pip install -r ammas_farm/requirements.txt
-    startCommand: gunicorn --chdir ammas_farm app:app
+    startCommand: gunicorn --chdir ammas_farm --bind 0.0.0.0:$PORT app:app
     envVars:
       - key: SECRET_KEY
         sync: false  # Set a strong random secret in Render dashboard
