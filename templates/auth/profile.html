@@ -28,8 +28,10 @@
 
       <div class="form-group">
         <label>Email <span class="required">*</span></label>
-        <input type="email" name="email" class="form-control"
+        <!-- ✅ FIXED: Email validation on profile update (Issue #7) -->
+        <input type="email" id="profile-email" name="email" class="form-control"
                value="{{ current_user['email'] }}" required />
+        <p id="email-hint" style="font-size:0.8rem;margin-top:0.3rem;display:none"></p>
       </div>
 
       <div class="form-group">
@@ -102,4 +104,64 @@
     </form>
   </div>
 </div>
+
+<script>
+// ✅ FIXED: Email domain validation on profile (Issue #7)
+const ALLOWED_DOMAINS = [
+  'gmail.com','googlemail.com',
+  'outlook.com','hotmail.com','hotmail.in','hotmail.co.uk','live.com',
+  'live.in','live.co.uk','msn.com','windowslive.com',
+  'yahoo.com','yahoo.in','yahoo.co.in','yahoo.co.uk','yahoo.com.au',
+  'ymail.com','rocketmail.com',
+  'icloud.com','me.com','mac.com',
+  'protonmail.com','proton.me',
+  'zoho.com','zohomail.com',
+  'aol.com','aim.com',
+  'rediffmail.com','indiatimes.com','sify.com','vsnl.com',
+  'tutanota.com','tuta.com',
+  'fastmail.com','fastmail.fm',
+  'gmx.com','gmx.net','gmx.de',
+  'web.de','mail.com','inbox.com',
+  'mail.ru','yandex.com','yandex.ru',
+  'comcast.net','verizon.net','att.net','cox.net','sbcglobal.net',
+];
+
+const emailInput = document.getElementById('profile-email');
+const hint = document.getElementById('email-hint');
+const currentEmail = '{{ current_user["email"] }}';
+
+function validateEmailDomain() {
+  const val = emailInput.value.trim().toLowerCase();
+  
+  // If email hasn't changed, don't validate
+  if (val === currentEmail) {
+    hint.style.display = 'none';
+    emailInput.setCustomValidity('');
+    return;
+  }
+  
+  const parts = val.split('@');
+  if (parts.length !== 2 || !parts[1]) {
+    hint.style.display = 'none';
+    emailInput.setCustomValidity('');
+    return;
+  }
+  
+  const domain = parts[1];
+  if (ALLOWED_DOMAINS.includes(domain)) {
+    hint.textContent = '✅ Valid email provider';
+    hint.style.color = 'var(--green-dark)';
+    hint.style.display = 'block';
+    emailInput.setCustomValidity('');
+  } else {
+    hint.textContent = '❌ Please use a recognised email provider (Gmail, Outlook, Yahoo, etc.)';
+    hint.style.color = 'var(--red)';
+    hint.style.display = 'block';
+    emailInput.setCustomValidity('Invalid email provider');
+  }
+}
+
+emailInput.addEventListener('input', validateEmailDomain);
+emailInput.addEventListener('blur', validateEmailDomain);
+</script>
 {% endblock %}
