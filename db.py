@@ -1,6 +1,6 @@
 """db.py — PostgreSQL (Neon DB) database helpers for Amma's Farm."""
 
-import os
+import os, json
 from datetime import datetime, date
 import psycopg2
 import psycopg2.pool
@@ -121,15 +121,11 @@ def init_db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""")
 
-        # Ensure there is a CHECK constraint preventing negative stock_quantity.
-        # If the constraint doesn't exist, add it. Use pg_constraint to detect existence.
         cur.execute("SELECT 1 FROM pg_constraint WHERE conname = 'stock_non_negative'")
         if cur.fetchone() is None:
             try:
                 cur.execute("ALTER TABLE products ADD CONSTRAINT stock_non_negative CHECK (stock_quantity >= 0)")
             except Exception:
-                # If adding the constraint fails for any reason, continue without crashing init.
-                # (e.g., older PG versions or existing incompatible schema)
                 pass
 
         cur.execute("""
@@ -182,6 +178,18 @@ def init_db():
             value TEXT DEFAULT ''
         )""")
 
+        # ✅ FIXED: Audit log table (Issue #12)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id SERIAL PRIMARY KEY,
+            admin_id INTEGER REFERENCES users(id),
+            action TEXT NOT NULL,
+            entity_type TEXT,
+            entity_id INTEGER,
+            details JSONB DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
+
         conn.commit()
         cur.close()
         print("Database initialized successfully 🌱")
@@ -201,6 +209,11 @@ def create_user(username, email, password, role='customer'):
         )
         conn.commit()
         cur.close()
+    except psycopg2.IntegrityError:
+        # ✅ FIXED: Re-raise for app.py to catch (Issue #3)
+        conn.rollback()
+        cur.close()
+        raise
     finally:
         release_conn(conn)
 
@@ -251,14 +264,11 @@ def update_user(user_id, **kwargs):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        # Map plain 'password' to 'password_hash' and hash it.
         if 'password' in kwargs:
             kwargs['password_hash'] = generate_password_hash(kwargs.pop('password'))
 
-        # Validate keys against whitelist to avoid SQL injection via column names
         valid_items = {k: v for k, v in kwargs.items() if k in ALLOWED_USER_COLUMNS}
         if not valid_items:
-            # Nothing valid to update
             cur.close()
             return
 
@@ -320,6 +330,16 @@ def get_all_categories():
     finally:
         release_conn(conn)
 
+def get_category_by_id(cat_id):
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM categories WHERE id=%s", (cat_id,))
+        row = dictfetchone(cur)
+        cur.close()
+        return row
+    finally:
+        release_conn(conn)
 
 def create_category(name, icon='🌿'):
     conn = get_conn()
@@ -486,10 +506,8 @@ def update_product(product_id, **kwargs):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        # Prevent manual updated_at override; we'll set it ourselves
         kwargs.pop('updated_at', None)
 
-        # Validate keys against whitelist to avoid SQL injection via column names
         valid_items = {k: v for k, v in kwargs.items() if k in ALLOWED_PRODUCT_COLUMNS}
         if not valid_items:
             cur.close()
@@ -565,12 +583,13 @@ def get_cart_items(user_id):
     conn = get_conn()
     try:
         cur = conn.cursor()
+        # ✅ FIXED: Changed JOIN to LEFT JOIN (Issue #8)
         cur.execute("""
             SELECT ci.id, ci.quantity,
                    p.id AS product_id, p.name, p.price, p.unit,
                    p.image, p.stock_quantity
             FROM cart_items ci
-            JOIN products p ON p.id = ci.product_id
+            LEFT JOIN products p ON p.id = ci.product_id
             WHERE ci.user_id = %s
             ORDER BY ci.created_at
         """, (user_id,))
@@ -677,7 +696,7 @@ def create_order(user_id, total_amount, delivery_address, phone_number, notes, i
             """, (order_id, item['product_id'], item['name'],
                   item['price'], item['quantity'], item['unit']))
 
-            # Defensive stock update: only decrement if there is enough stock left.
+            # ✅ FIXED: Better error message (Issue #2)
             cur.execute("""
                 UPDATE products
                 SET stock_quantity = stock_quantity - %s
@@ -685,10 +704,11 @@ def create_order(user_id, total_amount, delivery_address, phone_number, notes, i
             """, (item['quantity'], item['product_id'], item['quantity']))
 
             if cur.rowcount == 0:
-                # Not enough stock for this item — rollback and raise so caller can handle.
                 conn.rollback()
                 cur.close()
-                raise ValueError(f"Out of stock for product id {item['product_id']}")
+                product = get_product(item['product_id'])
+                product_name = product['name'] if product else f"Product {item['product_id']}"
+                raise ValueError(f"{product_name} is out of stock. Please remove it from your cart and try again.")
 
         cur.execute("DELETE FROM cart_items WHERE user_id=%s", (user_id,))
         conn.commit()
@@ -740,7 +760,6 @@ def get_my_orders(user_id, search='', status_filter=''):
             )""")
             params += [f"%{search}%", f"%{search}%"]
 
-        # Single JOIN query — no N+1
         cur.execute(f"""
             SELECT o.*, oi.id AS oi_id, oi.product_name, oi.product_price,
                    oi.quantity AS oi_qty, oi.unit AS oi_unit, oi.product_id AS oi_product_id
@@ -991,6 +1010,48 @@ def get_all_settings():
         cur = conn.cursor()
         cur.execute("SELECT key, value FROM settings")
         rows = {r[0]: r[1] for r in cur.fetchall()}
+        cur.close()
+        return rows
+    finally:
+        release_conn(conn)
+
+
+# ── Audit Logs ────────────────────────────────────────────────────────────────
+# ✅ FIXED: Admin action logging (Issue #12)
+
+def log_admin_action(admin_id, action, entity_type, entity_id, details=None):
+    """
+    Log admin actions for audit trail.
+    
+    Examples:
+    - log_admin_action(1, 'delete_product', 'product', 5, {'name': 'Tomato'})
+    - log_admin_action(1, 'update_order_status', 'order', 12, {'old_status': 'Pending', 'new_status': 'Shipped'})
+    """
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        details_json = json.dumps(details or {})
+        cur.execute("""
+            INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, details)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (admin_id, action, entity_type, entity_id, details_json))
+        conn.commit()
+        cur.close()
+    finally:
+        release_conn(conn)
+
+
+def get_audit_logs(limit=100):
+    """Retrieve admin action logs."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT al.*, u.username FROM audit_logs al
+            LEFT JOIN users u ON u.id = al.admin_id
+            ORDER BY al.created_at DESC LIMIT %s
+        """, (limit,))
+        rows = dictfetchall(cur)
         cur.close()
         return rows
     finally:

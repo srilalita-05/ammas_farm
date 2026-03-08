@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>📋 Admin Audit Log</h1>
+    <p>Track all admin actions and changes</p>
+  </div>
+</div>
+
+<div class="container">
+  {% if logs %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Admin</th>
+          <th>Action</th>
+          <th>Entity Type</th>
+          <th>Entity ID</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="text-muted small">{{ log['created_at'] }}</td>
+          <td><strong>{{ log['username'] or 'System' }}</strong></td>
+          <td>
+            {% if 'add' in log['action'] %}
+              <span class="badge badge-success">{{ log['action']|replace('_', ' ')|title }}</span>
+            {% elif 'delete' in log['action'] %}
+              <span class="badge badge-danger">{{ log['action']|replace('_', ' ')|title }}</span>
+            {% elif 'update' in log['action'] %}
+              <span class="badge badge-warning">{{ log['action']|replace('_', ' ')|title }}</span>
+            {% else %}
+              <span class="badge badge-muted">{{ log['action']|replace('_', ' ')|title }}</span>
+            {% endif %}
+          </td>
+          <td>{{ log['entity_type']|title if log['entity_type'] else '—' }}</td>
+          <td>{{ log['entity_id'] or '—' }}</td>
+          <td style="font-size:0.85rem">
+            {% if log['details'] and log['details'] != '{}' %}
+              {% set details = log['details']|from_json if log['details'] is string else log['details'] %}
+              {% for key, value in details.items() %}
+                <strong>{{ key|title }}:</strong>
+                {% if value is mapping %}
+                  {{ value.old }} → {{ value.new }}
+                {% else %}
+                  {{ value }}
+                {% endif %}
+                <br/>
+              {% endfor %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">📋</span>
+    <h3>No audit logs yet</h3>
+    <p>Admin actions will be recorded here.</p>
+  </div>
+  {% endif %}
+
+  <div style="margin-top:1.5rem">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">← Dashboard</a>
+  </div>
+</div>
+{% endblock %}

@@ -7,44 +7,125 @@
   <div class="cart-layout">
     <div class="cart-items">
       {% for item in items %}
-      <div class="cart-item">
-        {% if item['image'] %}
-        <img src="{{ url_for('static', filename='uploads/' + item['image']) }}" alt="{{ item['name'] }}" class="cart-item-img" />
+        {% if item['product_id'] %}
+          <!-- ✅ Product exists - show normally -->
+          <div class="cart-item">
+            {% if item['image'] %}
+            <img src="{{ url_for('static', filename='uploads/' + item['image']) }}" 
+                 alt="{{ item['name'] }}" class="cart-item-img" />
+            {% else %}
+            <div class="cart-item-img-placeholder">🌿</div>
+            {% endif %}
+            
+            <div class="cart-item-details">
+              <h4>{{ item['name'] }}</h4>
+              <p class="text-muted">₹{{ "%.2f"|format(item['price']) }} / {{ item['unit'] }}</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('update_cart_item', item_id=item['id']) }}" 
+                  class="cart-qty-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="number" name="quantity" value="{{ item['quantity'] }}" 
+                     min="1" max="{{ item['stock_quantity'] }}" class="qty-input" />
+              <button type="submit" class="btn btn-sm btn-outline">Update</button>
+            </form>
+            
+            <div class="cart-item-subtotal">₹{{ "%.2f"|format(item_subtotal(item)) }}</div>
+            
+            <form method="POST" action="{{ url_for('remove_cart_item', item_id=item['id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <button type="submit" class="btn-remove" title="Remove">✕</button>
+            </form>
+          </div>
+
         {% else %}
-        <div class="cart-item-img-placeholder">🌿</div>
+          <!-- ✅ Product was deleted - show warning (Issue #8) -->
+          <div class="cart-item deleted-item" style="background:#ffe8e8;border:1px solid #ffcccc;opacity:0.9">
+            <div class="cart-item-img-placeholder" style="background:#ffc0c0;color:#c0392b;font-size:1.8rem">
+              ❌
+            </div>
+            
+            <div class="cart-item-details">
+              <h4 style="color:#c0392b">⚠️ Product No Longer Available</h4>
+              <p class="text-muted" style="font-size:0.85rem">
+                This product has been removed from our catalog.
+              </p>
+            </div>
+            
+            <!-- Empty space where quantity would be -->
+            <div style="width:80px"></div>
+            
+            <!-- Empty space where subtotal would be -->
+            <div style="width:80px"></div>
+            
+            <!-- Remove button -->
+            <form method="POST" action="{{ url_for('remove_cart_item', item_id=item['id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+            </form>
+          </div>
         {% endif %}
-        <div class="cart-item-details">
-          <h4>{{ item['name'] }}</h4>
-          <p class="text-muted">₹{{ "%.2f"|format(item['price']) }} / {{ item['unit'] }}</p>
-        </div>
-        <form method="POST" action="{{ url_for('update_cart_item', item_id=item['id']) }}" class="cart-qty-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <input type="number" name="quantity" value="{{ item['quantity'] }}" min="1" max="{{ item['stock_quantity'] }}" class="qty-input" />
-          <button type="submit" class="btn btn-sm btn-outline">Update</button>
-        </form>
-        <div class="cart-item-subtotal">₹{{ "%.2f"|format(item_subtotal(item)) }}</div>
-        <form method="POST" action="{{ url_for('remove_cart_item', item_id=item['id']) }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <button type="submit" class="btn-remove" title="Remove">✕</button>
-        </form>
-      </div>
       {% endfor %}
     </div>
+
+    <!-- ✅ Recalculate total to exclude deleted items (Issue #8) -->
+    {% set valid_items = [i for i in items if i['product_id']] %}
+    {% set deleted_items = [i for i in items if not i['product_id']] %}
+    {% set valid_total = sum([item_subtotal(i) for i in valid_items]) %}
+    
     <div class="cart-summary">
       <div class="summary-card">
         <h3>Order Summary</h3>
-        <div class="summary-row"><span>Items ({{ items|length }})</span><span>₹{{ "%.2f"|format(total) }}</span></div>
-        <div class="summary-row summary-total"><span>Total</span><strong>₹{{ "%.2f"|format(total) }}</strong></div>
-        <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-full" style="margin-top:1rem;">Proceed to Checkout →</a>
+        
+        {% if valid_items %}
+          <div class="summary-row">
+            <span>Items ({{ valid_items|length }})</span>
+            <span>₹{{ "%.2f"|format(valid_total) }}</span>
+          </div>
+          <div class="summary-row summary-total">
+            <span>Total</span>
+            <strong>₹{{ "%.2f"|format(valid_total) }}</strong>
+          </div>
+        {% endif %}
+
+        {% if deleted_items %}
+          <div style="padding:0.75rem;background:#ffe8e8;border-radius:8px;margin-bottom:1rem">
+            <p style="color:#c0392b;font-weight:600;font-size:0.85rem;margin:0 0 0.5rem 0">
+              ⚠️ {{ deleted_items|length }} item{{ 's' if deleted_items|length != 1 }} no longer available
+            </p>
+            <p style="color:#a93226;font-size:0.8rem;margin:0">
+              Scroll down to remove unavailable items, then checkout.
+            </p>
+          </div>
+        {% endif %}
+
+        {% if valid_items %}
+          <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-full" style="margin-top:1rem;">
+            Proceed to Checkout →
+          </a>
+        {% else %}
+          <button class="btn btn-disabled btn-full" disabled style="margin-top:1rem;">
+            No Items to Checkout
+          </button>
+        {% endif %}
+
         <form method="POST" action="{{ url_for('clear_cart') }}" style="margin-top:0.75rem;">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <button type="submit" class="btn btn-outline btn-full" onclick="return confirm('Clear entire cart?')">Clear Cart</button>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <button type="submit" class="btn btn-outline btn-full" 
+                  onclick="return confirm('Clear entire cart?')">
+            Clear Cart
+          </button>
         </form>
-        <a href="{{ url_for('shop') }}" class="btn btn-ghost btn-full" style="margin-top:0.5rem;">← Continue Shopping</a>
+
+        <a href="{{ url_for('shop') }}" class="btn btn-ghost btn-full" style="margin-top:0.5rem;">
+          ← Continue Shopping
+        </a>
       </div>
     </div>
   </div>
+
   {% else %}
+  <!-- Cart is completely empty -->
   <div class="empty-state">
     <span class="empty-icon">🛒</span>
     <h3>Your cart is empty</h3>
