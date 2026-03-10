@@ -19,7 +19,7 @@
         <tbody>
           {% for cat in categories %}
           <tr>
-            <td style="font-size:1.4rem">{{ cat['icon'] }}</td>
+            <td style="font-size:1.5rem;line-height:1.2;max-width:44px;overflow:hidden">{{ cat['icon'] }}</td>
             <td><strong>{{ cat['name'] }}</strong></td>
             <td>
               <form method="POST" action="{{ url_for('admin_categories') }}" style="display:inline"
