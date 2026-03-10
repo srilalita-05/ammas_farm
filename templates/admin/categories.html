@@ -7,7 +7,7 @@
 </div></div>
 
 <div class="container">
-  <div style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start">
+  <div class="categories-layout">
 
     <!-- Existing categories -->
     <div class="form-card">
@@ -61,4 +61,19 @@
     <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">← Dashboard</a>
   </div>
 </div>
+
+<style>
+.categories-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .categories-layout {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 {% endblock %}
