@@ -2,17 +2,10 @@
 {% block title %}Shop — Fresh Produce{% endblock %}
 {% block content %}
 
-<!--
-  .shop-page-wrap  → position:relative container that holds EVERYTHING
-  #farm-canvas     → position:absolute, fills entire .shop-page-wrap
-  All other content → position:relative; z-index:1  (sits above canvas)
--->
 <div class="shop-page-wrap">
 
-  <!-- ══ FULL-PAGE FARM CANVAS ══════════════════════════════════════ -->
   <canvas id="farm-canvas"></canvas>
 
-  <!-- ══ HERO / SEARCH ═══════════════════════════════════════════════ -->
   <div class="shop-hero-glass">
     <div class="hero-content">
       <h1>🌾 Fresh from Amma's Farm</h1>
@@ -45,7 +38,6 @@
     </div>
   </div>
 
-  <!-- ══ CATEGORY TABS ════════════════════════════════════════════════ -->
   <div class="category-bar category-bar-shop">
     <div class="container">
       <div class="cat-tabs">
@@ -61,7 +53,6 @@
     </div>
   </div>
 
-  <!-- ══ PRODUCT GRID ═════════════════════════════════════════════════ -->
   <div class="shop-products-area">
     <div class="container">
       {% if products %}
@@ -71,8 +62,12 @@
         <div class="product-card {% if not product_is_available(p) %}product-unavailable{% endif %}">
           <a href="{{ url_for('product_detail', product_id=p['id']) }}" class="product-img-link">
             {% if p['image'] %}
-            <img src="{{ url_for('static', filename='uploads/' + p['image']) }}"
-                 alt="{{ p['name'] }}" class="product-img"/>
+              {% if p['image'].startswith('http') %}
+                <img src="{{ p['image'] }}" alt="{{ p['name'] }}" class="product-img"/>
+              {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + p['image']) }}"
+                     alt="{{ p['name'] }}" class="product-img"/>
+              {% endif %}
             {% else %}
             <div class="product-img-placeholder">{{ p['category_icon'] or '🌿' }}</div>
             {% endif %}
@@ -141,7 +136,7 @@
       </div>
       {% endif %}
     </div>
-  </div><!-- /shop-products-area -->
+  </div>
 
-</div><!-- /shop-page-wrap -->
+</div>
 {% endblock %}
