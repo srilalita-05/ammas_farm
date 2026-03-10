@@ -13,6 +13,7 @@
     <div class="form-card">
       <h3 style="margin-bottom:1rem;color:var(--green-dark)">Current Categories</h3>
       {% if categories %}
+      <div class="categories-table-wrap">
       <table class="data-table">
         <thead><tr><th>Icon</th><th>Name</th><th>Action</th></tr></thead>
         <tbody>
@@ -33,6 +34,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
       {% else %}
       <p class="text-muted">No categories yet.</p>
       {% endif %}

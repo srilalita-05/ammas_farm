@@ -824,3 +824,87 @@ hr.divider  { border: none; border-top: 1px solid var(--border); margin: 1rem 0;
   .progress-step { min-width: 48px; }
   .step-label { font-size: 0.6rem; }
 }
+
+/* ── Mobile table fix — make all tables scroll horizontally ────────── */
+@media (max-width: 768px) {
+  /* Remove min-width so tables don't force page to be wider */
+  .data-table {
+    min-width: unset;
+    width: 100%;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table thead,
+  .data-table tbody,
+  .data-table tfoot {
+    display: table;
+    width: 100%;
+  }
+
+  /* Make table cells tighter on mobile */
+  .data-table th,
+  .data-table td {
+    padding: 0.55rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  /* Shrink delete/action buttons */
+  .data-table .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.72rem;
+  }
+
+  /* Specifically fix categories table — make it a card-list on mobile */
+  .categories-table-wrap .data-table,
+  .categories-table-wrap .data-table thead,
+  .categories-table-wrap .data-table tbody,
+  .categories-table-wrap .data-table tfoot,
+  .categories-table-wrap .data-table tr,
+  .categories-table-wrap .data-table th,
+  .categories-table-wrap .data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .categories-table-wrap .data-table thead tr {
+    display: none; /* hide header row */
+  }
+
+  .categories-table-wrap .data-table tr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    gap: 0.75rem;
+  }
+
+  .categories-table-wrap .data-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .categories-table-wrap .data-table td {
+    padding: 0;
+    border: none;
+    font-size: 0.9rem;
+  }
+
+  /* Icon cell — shrink */
+  .categories-table-wrap .data-table td:first-child {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    width: 36px;
+  }
+
+  /* Name cell — take up remaining space */
+  .categories-table-wrap .data-table td:nth-child(2) {
+    flex: 1;
+  }
+
+  /* Action cell — shrink to button size */
+  .categories-table-wrap .data-table td:last-child {
+    flex-shrink: 0;
+  }
+}
