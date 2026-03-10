@@ -86,8 +86,13 @@
           <label>Product Image</label>
           {% if product and product['image'] %}
           <div style="margin-bottom:0.5rem">
-            <img src="{{ url_for('static', filename='uploads/' + product['image']) }}"
-                 style="height:80px;border-radius:8px;border:1px solid #ddd"/>
+            {% if product['image'].startswith('http') %}
+              <img src="{{ product['image'] }}"
+                   style="height:80px;border-radius:8px;border:1px solid #ddd"/>
+            {% else %}
+              <img src="{{ url_for('static', filename='uploads/' + product['image']) }}"
+                   style="height:80px;border-radius:8px;border:1px solid #ddd"/>
+            {% endif %}
             <p class="text-muted small">Upload new image to replace</p>
           </div>
           {% endif %}

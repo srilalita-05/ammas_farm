@@ -1,14 +1,15 @@
 """app.py — Amma's Farm Flask application."""
 
-import os, time, secrets, json, uuid
+import os, time, secrets, json
 import urllib.request, urllib.error
 from functools import wraps
 from flask import (Flask, render_template, redirect, url_for, flash,
                    request, session, g, jsonify, abort)
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
 import db as database
 from dotenv import load_dotenv
-import psycopg2
 load_dotenv()
 
 BASE_DIR      = os.path.abspath(os.path.dirname(__file__))
@@ -22,6 +23,14 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 database.init_db()
+
+# ── Cloudinary config ─────────────────────────────────────────────────────────
+
+cloudinary.config(
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key    = os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret = os.environ.get('CLOUDINARY_API_SECRET'),
+)
 
 # ── Allowed email domains ────────────────────────────────────────────
 
@@ -92,8 +101,7 @@ def login_user(user):
 def logout_user():
     session.pop('user_id', None)
 
-# ── Single before_request: loads user + cart count + categories
-#    using ONE connection checkout instead of three separate ones ──────────────
+# ── Single before_request: loads user + cart count + categories ──────────────
 
 @app.before_request
 def load_user():
@@ -105,12 +113,10 @@ def load_user():
     try:
         cur = conn.cursor()
 
-        # 1. Load logged-in user
         if 'user_id' in session:
             cur.execute("SELECT * FROM users WHERE id=%s", (session['user_id'],))
             g.user = database.dictfetchone(cur)
 
-        # 2. Cart count (only for logged-in customers)
         if g.user:
             cur.execute(
                 "SELECT COALESCE(SUM(quantity),0) FROM cart_items WHERE user_id=%s",
@@ -118,7 +124,6 @@ def load_user():
             )
             g.cart_count = int(cur.fetchone()[0])
 
-        # 3. Categories — cached on app object, refreshed every 5 minutes
         now = time.time()
         if not hasattr(app, '_cat_cache') or now - app._cat_cache_time > 300:
             cur.execute("SELECT * FROM categories ORDER BY name")
@@ -190,14 +195,26 @@ app.jinja_env.globals.update(
 def allowed_file(fn): return '.' in fn and fn.rsplit('.',1)[1].lower() in ALLOWED_EXT
 
 def save_upload(file_obj):
+    """Upload to Cloudinary and return the secure URL, or None on failure."""
     if file_obj and file_obj.filename and allowed_file(file_obj.filename):
-        fn   = secure_filename(file_obj.filename)
-        base, ext = os.path.splitext(fn)
-        # ✅ FIXED: Use UUID instead of timestamp (no collisions)
-        uniq = f"{base}_{uuid.uuid4().hex}{ext}"
-        file_obj.save(os.path.join(UPLOAD_FOLDER, uniq))
-        return uniq
+        try:
+            result = cloudinary.uploader.upload(
+                file_obj,
+                folder="ammas_farm",
+                transformation=[{"width": 600, "crop": "limit"}]
+            )
+            return result['secure_url']
+        except Exception as e:
+            print(f"Cloudinary upload error: {e}")
+            return None
     return None
+
+def delete_image(image_val):
+    """Delete image only if it's a local file (not a Cloudinary URL)."""
+    if image_val and not image_val.startswith('http'):
+        old_path = os.path.join(UPLOAD_FOLDER, image_val)
+        if os.path.exists(old_path):
+            os.remove(old_path)
 
 # ── Email via Resend ──────────────────────────────────────────────────────────
 
@@ -296,15 +313,15 @@ def register():
             flash('Passwords do not match.', 'error')
         elif not is_allowed_email(email):
             flash('Please use a recognised email provider (Gmail, Outlook, Yahoo, etc.).', 'error')
+        elif database.get_user_by_username(username):
+            flash('Username already taken.', 'error')
+        elif database.get_user_by_email(email):
+            flash('Email already registered.', 'error')
         else:
-            # ✅ FIXED: Try-catch for registration race condition (Issue #3)
-            try:
-                database.create_user(username, email, password)
-                login_user(database.get_user_by_username(username))
-                flash("Welcome to Amma's Farm! 🌾", 'success')
-                return redirect(url_for('shop'))
-            except psycopg2.IntegrityError:
-                flash('Username or email already registered.', 'error')
+            database.create_user(username, email, password)
+            login_user(database.get_user_by_username(username))
+            flash("Welcome to Amma's Farm! 🌾", 'success')
+            return redirect(url_for('shop'))
     return render_template('auth/register.html')
 
 @app.route('/auth/login', methods=['GET','POST'])
@@ -329,38 +346,15 @@ def logout():
 @login_required
 def profile():
     if request.method == 'POST':
-        # Get form data
-        first_name = request.form.get('first_name','').strip()
-        last_name = request.form.get('last_name','').strip()
-        new_email = request.form.get('email','').strip()
-        phone_number = request.form.get('phone_number','').strip()
-        address = build_address(request.form)
-        
-        # ✅ FIXED: Validate email on profile update (Issue #7)
-        if new_email and new_email != g.user['email']:
-            if not is_allowed_email(new_email):
-                flash('Please use a recognised email provider (Gmail, Outlook, Yahoo, etc.).', 'error')
-                return render_template('auth/profile.html')
-            existing_user = database.get_user_by_email(new_email)
-            if existing_user and existing_user['id'] != g.user['id']:
-                flash('Email already registered.', 'error')
-                return render_template('auth/profile.html')
-        
-        updates = {
-            'first_name': first_name,
-            'last_name': last_name,
-            'email': new_email,
-            'phone_number': phone_number,
-            'address': address
-        }
-        
+        updates = {k: request.form.get(k,'').strip() for k in
+                   ['first_name','last_name','email','phone_number']}
+        updates['address'] = build_address(request.form)
         new_pw = request.form.get('new_password','')
         if new_pw:
             if not database.verify_password(g.user, request.form.get('current_password','')):
                 flash('Current password is incorrect.', 'error')
                 return render_template('auth/profile.html')
             updates['password'] = new_pw
-        
         database.update_user(g.user['id'], **updates)
         g.user = database.get_user_by_id(g.user['id'])
         flash('Profile updated!', 'success')
@@ -401,7 +395,7 @@ def product_detail(product_id):
 @login_required
 def view_cart():
     items = database.get_cart_items(g.user['id'])
-    return render_template('cart/cart.html', items=items, total=sum(item_subtotal(i) for i in items if i['product_id']))
+    return render_template('cart/cart.html', items=items, total=sum(item_subtotal(i) for i in items))
 
 @app.route('/cart/add', methods=['POST'])
 @login_required
@@ -458,66 +452,25 @@ def clear_cart():
 def checkout():
     items = database.get_cart_items(g.user['id'])
     if not items: flash('Your cart is empty.','info'); return redirect(url_for('view_cart'))
-    
-    # ✅ FIXED: Only count valid (non-deleted) items in total (Issue #8)
-    valid_items = [i for i in items if i['product_id']]
-    total = sum(item_subtotal(i) for i in valid_items)
-    
+    total = sum(item_subtotal(i) for i in items)
     if request.method == 'POST':
         delivery_address = build_address(request.form)
         phone_number     = request.form.get('phone_number','').strip()
         notes            = request.form.get('notes','').strip()
-        
         if not delivery_address or not phone_number:
             flash('Delivery address and phone number are required.','error')
             return render_template('orders/checkout.html', items=items, total=total)
-        
-        # ✅ FIXED: Validate all items before checkout (Issues #1, #11)
         for item in items:
             p = database.get_product(item['product_id'])
-            
-            # Check if product exists
-            if not p:
-                flash(f"One of your items is no longer available. Please remove it and try again.", "error")
-                return render_template('orders/checkout.html', items=items, total=total)
-            
-            # ✅ Check seasonal availability (Issue #11)
-            if not p['seasonal_availability']:
-                flash(f"{p['name']} is currently out of season. Please remove it and try again.", "error")
-                return render_template('orders/checkout.html', items=items, total=total)
-            
-            # Check stock quantity
             if item['quantity'] > p['stock_quantity']:
-                flash(f"Insufficient stock for {p['name']}. Only {p['stock_quantity']} {p['unit']} available.", "error")
+                flash(f"Insufficient stock for {item['name']}.","error")
                 return render_template('orders/checkout.html', items=items, total=total)
-        
-        # ✅ FIXED: Try-catch for order creation (Issue #2)
-        try:
-            order_id = database.create_order(g.user['id'], total, delivery_address, phone_number, notes, valid_items)
-        except ValueError as e:
-            flash(f"Order failed: {str(e)} Please try again.", "error")
-            items = database.get_cart_items(g.user['id'])
-            valid_items = [i for i in items if i['product_id']]
-            total = sum(item_subtotal(i) for i in valid_items)
-            return render_template('orders/checkout.html', items=items, total=total)
-        
+        order_id = database.create_order(g.user['id'], total, delivery_address, phone_number, notes, items)
         order = database.get_order_full(order_id)
-        
-        # ✅ FIXED: Handle email failures gracefully (Issue #5)
-        email_sent = False
-        try:
-            notify_order_placed(order, g.user)
-            email_sent = True
-        except Exception as e:
-            print(f"[ERROR] Email failed for order {order_id}: {str(e)}")
-        
-        if email_sent:
-            flash(f'Order #{order_id} placed! Confirmation sent to {g.user["email"]} 🎉','success')
-        else:
-            flash(f'Order #{order_id} placed! ⚠️ Confirmation email may be delayed.','warning')
-        
+        try: notify_order_placed(order, g.user)
+        except Exception: pass
+        flash(f'Order #{order_id} placed successfully! 🎉','success')
         return redirect(url_for('order_confirmation', order_id=order_id))
-    
     return render_template('orders/checkout.html', items=items, total=total)
 
 @app.route('/orders/<int:order_id>/confirmation')
@@ -599,16 +552,6 @@ def admin_add_product():
                                       seasonal_availability=seasonal,
                                       category_id=cat_id, image=img)
         database.log_stock_change(pid, g.user['id'], 0, stock, note or 'Initial stock')
-        
-        # ✅ FIXED: Log admin action (Issue #12)
-        database.log_admin_action(
-            admin_id=g.user['id'],
-            action='add_product',
-            entity_type='product',
-            entity_id=pid,
-            details={'name': name, 'price': price, 'stock': stock}
-        )
-        
         if hasattr(app, '_cat_cache'):
             app._cat_cache_time = 0
         flash(f'Product "{name}" added! 🌱','success')
@@ -627,20 +570,6 @@ def admin_edit_product(product_id):
         old_stock = product['stock_quantity']
         new_stock = request.form.get('stock_quantity', type=int)
         note      = request.form.get('stock_note','').strip()
-        
-        # Store old values for audit
-        changes = {}
-        if request.form.get('name','').strip() != product['name']:
-            changes['name'] = {
-                'old': product['name'],
-                'new': request.form.get('name','').strip()
-            }
-        if float(request.form.get('price', 0)) != float(product['price']):
-            changes['price'] = {
-                'old': float(product['price']),
-                'new': float(request.form.get('price', 0))
-            }
-        
         updates = {
             'name':                request.form.get('name','').strip(),
             'description':         request.form.get('description','').strip(),
@@ -653,29 +582,10 @@ def admin_edit_product(product_id):
         }
         new_img = save_upload(request.files.get('image'))
         if new_img:
-            if product['image']:
-                old_path = os.path.join(UPLOAD_FOLDER, product['image'])
-                # ✅ FIXED: Try-catch for file deletion (Issue #9)
-                try:
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                except OSError as e:
-                    print(f"[WARNING] Failed to delete old image {product['image']}: {e}")
+            # Only delete if it's an old local file, not a Cloudinary URL
+            delete_image(product['image'])
             updates['image'] = new_img
-            changes['image'] = {'old': product['image'], 'new': new_img}
-        
         database.update_product(product_id, **updates)
-        
-        # ✅ FIXED: Log admin action (Issue #12)
-        if changes:
-            database.log_admin_action(
-                admin_id=g.user['id'],
-                action='edit_product',
-                entity_type='product',
-                entity_id=product_id,
-                details=changes
-            )
-        
         if new_stock is not None:
             database.log_stock_change(product_id, g.user['id'], old_stock, new_stock, note)
         flash('Product updated!','success')
@@ -689,26 +599,9 @@ def admin_edit_product(product_id):
 def admin_delete_product(product_id):
     product = database.get_product(product_id)
     if product:
-        if product['image']:
-            p = os.path.join(UPLOAD_FOLDER, product['image'])
-            # ✅ FIXED: Try-catch for file deletion (Issue #9)
-            try:
-                if os.path.exists(p):
-                    os.remove(p)
-            except OSError as e:
-                print(f"[WARNING] Failed to delete image file {product['image']}: {e}")
-        
+        # Only delete local files; Cloudinary URLs are not deleted from disk
+        delete_image(product['image'])
         database.delete_product(product_id)
-        
-        # ✅ FIXED: Log admin action (Issue #12)
-        database.log_admin_action(
-            admin_id=g.user['id'],
-            action='delete_product',
-            entity_type='product',
-            entity_id=product_id,
-            details={'name': product['name'], 'price': product['price']}
-        )
-        
         flash(f"Product \"{product['name']}\" deleted.",'info')
     return redirect(url_for('admin_products'))
 
@@ -723,14 +616,6 @@ def admin_categories():
             icon = request.form.get('icon','🌿').strip()
             if name:
                 database.create_category(name, icon)
-                # ✅ Log admin action (Issue #12)
-                database.log_admin_action(
-                    admin_id=g.user['id'],
-                    action='add_category',
-                    entity_type='category',
-                    entity_id=None,
-                    details={'name': name, 'icon': icon}
-                )
                 if hasattr(app, '_cat_cache'):
                     app._cat_cache_time = 0
                 flash(f'Category "{name}" added!','success')
@@ -739,16 +624,7 @@ def admin_categories():
         elif action == 'delete':
             cat_id = request.form.get('cat_id', type=int)
             if cat_id:
-                cat = database.get_category_by_id(cat_id)
                 database.delete_category(cat_id)
-                # ✅ Log admin action (Issue #12)
-                database.log_admin_action(
-                    admin_id=g.user['id'],
-                    action='delete_category',
-                    entity_type='category',
-                    entity_id=cat_id,
-                    details={'name': cat['name'] if cat else 'Unknown'}
-                )
                 if hasattr(app, '_cat_cache'):
                     app._cat_cache_time = 0
                 flash('Category deleted.','info')
@@ -781,20 +657,7 @@ def admin_update_order_status(order_id):
     if new_status not in ['Pending','Packed','Shipped','Delivered']:
         flash('Invalid status.','error')
     else:
-        old_order = database.get_order_full(order_id)
-        old_status = old_order['order_status']
-        
         database.update_order_status(order_id, new_status)
-        
-        # ✅ FIXED: Log admin action (Issue #12)
-        database.log_admin_action(
-            admin_id=g.user['id'],
-            action='update_order_status',
-            entity_type='order',
-            entity_id=order_id,
-            details={'old_status': old_status, 'new_status': new_status}
-        )
-        
         flash(f'Order #{order_id} updated to {new_status}.','success')
     return redirect(request.referrer or url_for('admin_orders'))
 
@@ -837,12 +700,6 @@ def admin_stock_logs():
     logs = database.get_stock_logs(limit=100)
     return render_template('admin/stock_logs.html', logs=logs)
 
-@app.route('/admin/audit-log')
-@login_required
-@admin_required
-def admin_audit_log():
-    logs = database.get_audit_logs(limit=200)
-    return render_template('admin/audit_log.html', logs=logs)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

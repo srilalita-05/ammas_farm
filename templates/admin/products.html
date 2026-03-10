@@ -14,7 +14,17 @@
       <tbody>
         {% for p in products %}
         <tr class="{% if p['stock_quantity'] == 0 %}row-danger{% elif product_is_low_stock(p) %}row-warning{% endif %}">
-          <td>{% if p['image'] %}<img src="{{ url_for('static', filename='uploads/' + p['image']) }}" class="table-thumb" />{% else %}<div class="table-thumb-placeholder">🌿</div>{% endif %}</td>
+          <td>
+            {% if p['image'] %}
+              {% if p['image'].startswith('http') %}
+                <img src="{{ p['image'] }}" class="table-thumb"/>
+              {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + p['image']) }}" class="table-thumb"/>
+              {% endif %}
+            {% else %}
+            <div class="table-thumb-placeholder">🌿</div>
+            {% endif %}
+          </td>
           <td><strong>{{ p['name'] }}</strong></td>
           <td>₹{{ "%.2f"|format(p['price']) }}</td>
           <td>{{ p['stock_quantity'] }}{% if p['stock_quantity'] == 0 %}<span class="badge badge-danger">Out</span>{% elif product_is_low_stock(p) %}<span class="badge badge-warning">Low</span>{% endif %}</td>
@@ -24,7 +34,7 @@
           <td class="action-col">
             <a href="{{ url_for('admin_edit_product', product_id=p['id']) }}" class="btn btn-sm btn-outline">Edit</a>
             <form method="POST" action="{{ url_for('admin_delete_product', product_id=p['id']) }}" style="display:inline;" onsubmit="return confirm('Delete {{ p['name'] }}?')">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
               <button type="submit" class="btn btn-sm btn-danger">Delete</button>
             </form>
           </td>
