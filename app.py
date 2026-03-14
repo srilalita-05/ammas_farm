@@ -552,6 +552,11 @@ def admin_add_product():
                                       seasonal_availability=seasonal,
                                       category_id=cat_id, image=img)
         database.log_stock_change(pid, g.user['id'], 0, stock, note or 'Initial stock')
+        # ✅ Audit log: product added
+        database.log_admin_action(
+            g.user['id'], 'add_product', 'product', pid,
+            {'name': name, 'price': price, 'stock': stock}
+        )
         if hasattr(app, '_cat_cache'):
             app._cat_cache_time = 0
         flash(f'Product "{name}" added! 🌱','success')
@@ -568,12 +573,14 @@ def admin_edit_product(product_id):
     if not product: flash('Product not found.','error'); return redirect(url_for('admin_products'))
     if request.method == 'POST':
         old_stock = product['stock_quantity']
+        old_price = product['price']
         new_stock = request.form.get('stock_quantity', type=int)
+        new_price = request.form.get('price', type=float)
         note      = request.form.get('stock_note','').strip()
         updates = {
             'name':                request.form.get('name','').strip(),
             'description':         request.form.get('description','').strip(),
-            'price':               request.form.get('price', type=float),
+            'price':               new_price,
             'stock_quantity':      new_stock,
             'unit':                request.form.get('unit','kg').strip(),
             'low_stock_threshold': request.form.get('low_stock_threshold', 10, type=int),
@@ -582,12 +589,23 @@ def admin_edit_product(product_id):
         }
         new_img = save_upload(request.files.get('image'))
         if new_img:
-            # Only delete if it's an old local file, not a Cloudinary URL
             delete_image(product['image'])
             updates['image'] = new_img
         database.update_product(product_id, **updates)
         if new_stock is not None:
             database.log_stock_change(product_id, g.user['id'], old_stock, new_stock, note)
+        # ✅ Audit log: product edited — record what changed
+        changed = {}
+        if updates['name'] != product['name']:
+            changed['name'] = {'old': product['name'], 'new': updates['name']}
+        if new_price is not None and new_price != old_price:
+            changed['price'] = {'old': old_price, 'new': new_price}
+        if new_stock is not None and new_stock != old_stock:
+            changed['stock'] = {'old': old_stock, 'new': new_stock}
+        database.log_admin_action(
+            g.user['id'], 'edit_product', 'product', product_id,
+            changed or {'name': updates['name']}
+        )
         flash('Product updated!','success')
         return redirect(url_for('admin_products'))
     return render_template('admin/product_form.html', product=product,
@@ -599,9 +617,13 @@ def admin_edit_product(product_id):
 def admin_delete_product(product_id):
     product = database.get_product(product_id)
     if product:
-        # Only delete local files; Cloudinary URLs are not deleted from disk
         delete_image(product['image'])
         database.delete_product(product_id)
+        # ✅ Audit log: product deleted
+        database.log_admin_action(
+            g.user['id'], 'delete_product', 'product', product_id,
+            {'name': product['name']}
+        )
         flash(f"Product \"{product['name']}\" deleted.",'info')
     return redirect(url_for('admin_products'))
 
@@ -618,6 +640,11 @@ def admin_categories():
                 database.create_category(name, icon)
                 if hasattr(app, '_cat_cache'):
                     app._cat_cache_time = 0
+                # ✅ Audit log: category added
+                database.log_admin_action(
+                    g.user['id'], 'add_category', 'category', None,
+                    {'name': name, 'icon': icon}
+                )
                 flash(f'Category "{name}" added!','success')
             else:
                 flash('Category name required.','error')
@@ -627,6 +654,10 @@ def admin_categories():
                 database.delete_category(cat_id)
                 if hasattr(app, '_cat_cache'):
                     app._cat_cache_time = 0
+                # ✅ Audit log: category deleted
+                database.log_admin_action(
+                    g.user['id'], 'delete_category', 'category', cat_id, {}
+                )
                 flash('Category deleted.','info')
         return redirect(url_for('admin_categories'))
     return render_template('admin/categories.html', categories=database.get_all_categories())
@@ -657,7 +688,14 @@ def admin_update_order_status(order_id):
     if new_status not in ['Pending','Packed','Shipped','Delivered']:
         flash('Invalid status.','error')
     else:
+        order = database.get_order_full(order_id)
+        old_status = order['order_status'] if order else '?'
         database.update_order_status(order_id, new_status)
+        # ✅ Audit log: order status changed
+        database.log_admin_action(
+            g.user['id'], 'update_order_status', 'order', order_id,
+            {'old_status': old_status, 'new_status': new_status}
+        )
         flash(f'Order #{order_id} updated to {new_status}.','success')
     return redirect(request.referrer or url_for('admin_orders'))
 
@@ -699,6 +737,14 @@ def admin_settings():
 def admin_stock_logs():
     logs = database.get_stock_logs(limit=100)
     return render_template('admin/stock_logs.html', logs=logs)
+
+# ✅ FIXED: Missing audit log route
+@app.route('/admin/audit-log')
+@login_required
+@admin_required
+def admin_audit_log():
+    logs = database.get_audit_logs(limit=100)
+    return render_template('admin/audit_log.html', logs=logs)
 
 
 @app.route('/contact', methods=['GET', 'POST'])
