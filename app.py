@@ -168,7 +168,7 @@ def full_name(user):
     return n or user['username']
 
 def product_is_available(p):
-    return bool(p['seasonal_availability']) and p['stock_quantity'] > 0
+    return p['stock_quantity'] > 0
 
 def product_is_low_stock(p):
     return 0 < p['stock_quantity'] <= p['low_stock_threshold']
