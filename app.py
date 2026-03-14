@@ -701,6 +701,54 @@ def admin_stock_logs():
     return render_template('admin/stock_logs.html', logs=logs)
 
 
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    form_success = False
+    form_data = None
+    if request.method == 'POST':
+        form_data = {
+            'name':    request.form.get('name', '').strip(),
+            'phone':   request.form.get('phone', '').strip(),
+            'email':   request.form.get('email', '').strip(),
+            'subject': request.form.get('subject', '').strip(),
+            'message': request.form.get('message', '').strip(),
+        }
+        if form_data['name'] and form_data['email'] and form_data['subject'] and form_data['message']:
+            admin_email = database.get_setting('resend_admin_email')
+            if admin_email:
+                html_body = f"""
+                <div style='font-family:sans-serif;max-width:580px;margin:auto;background:#fdf6e3;
+                            border-radius:12px;padding:32px;border:1px solid #d4c9a8'>
+                  <h2 style='color:#2d5016;margin-top:0'>📬 New Contact Form Message</h2>
+                  <table style='width:100%;border-collapse:collapse;font-size:0.9rem'>
+                    <tr><td style='padding:6px 0;color:#6b7280;width:100px'><strong>Name</strong></td>
+                        <td style='padding:6px 0'>{form_data['name']}</td></tr>
+                    <tr><td style='padding:6px 0;color:#6b7280'><strong>Email</strong></td>
+                        <td style='padding:6px 0'>{form_data['email']}</td></tr>
+                    <tr><td style='padding:6px 0;color:#6b7280'><strong>Phone</strong></td>
+                        <td style='padding:6px 0'>{form_data['phone'] or '—'}</td></tr>
+                    <tr><td style='padding:6px 0;color:#6b7280'><strong>Subject</strong></td>
+                        <td style='padding:6px 0'>{form_data['subject']}</td></tr>
+                  </table>
+                  <div style='margin-top:1rem;padding:1rem;background:#fff;border-radius:8px;
+                              border:1px solid #d4c9a8;font-size:0.9rem;line-height:1.6'>
+                    {form_data['message']}
+                  </div>
+                  <p style='color:#6b7280;font-size:0.82rem;margin-top:1rem'>
+                    Sent via the Contact Us form on Amma's Farm
+                  </p>
+                </div>"""
+                send_resend_email(
+                    admin_email,
+                    f"Contact Form: {form_data['subject']} — {form_data['name']}",
+                    html_body
+                )
+            form_success = True
+            form_data = None
+        else:
+            flash('Please fill in all required fields.', 'error')
+    return render_template('contact.html', form_success=form_success, form_data=form_data)
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
