@@ -30,7 +30,15 @@
           <td>{{ p['stock_quantity'] }}{% if p['stock_quantity'] == 0 %}<span class="badge badge-danger">Out</span>{% elif product_is_low_stock(p) %}<span class="badge badge-warning">Low</span>{% endif %}</td>
           <td>{{ p['unit'] }}</td>
           <td>{% if p['seasonal_availability'] %}<span class="badge badge-success">✅ Yes</span>{% else %}<span class="badge badge-muted">❌ No</span>{% endif %}</td>
-          <td>{% if product_is_available(p) %}<span class="badge badge-success">Available</span>{% else %}<span class="badge badge-danger">Unavailable</span>{% endif %}</td>
+          <td>
+            {% if p['stock_quantity'] <= 0 %}
+              <span class="badge badge-danger">Unavailable</span>
+            {% elif product_is_low_stock(p) %}
+              <span class="badge badge-warning">Limited Stock</span>
+            {% else %}
+              <span class="badge badge-success">Available</span>
+            {% endif %}
+          </td>
           <td class="action-col">
             <a href="{{ url_for('admin_edit_product', product_id=p['id']) }}" class="btn btn-sm btn-outline">Edit</a>
             <form method="POST" action="{{ url_for('admin_delete_product', product_id=p['id']) }}" style="display:inline;" onsubmit="return confirm('Delete {{ p['name'] }}?')">
