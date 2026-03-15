@@ -6,6 +6,7 @@ from functools import wraps
 from flask import (Flask, render_template, redirect, url_for, flash,
                    request, session, g, jsonify, abort)
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
 import cloudinary
 import cloudinary.uploader
 import db as database
@@ -92,6 +93,14 @@ def csrf_protect():
             return redirect(request.referrer or url_for('shop'))
 
 app.jinja_env.globals['csrf_token'] = get_csrf_token
+
+# ── 413 handler — oversized image upload ─────────────────────────────────────
+
+@app.errorhandler(413)
+@app.errorhandler(RequestEntityTooLarge)
+def handle_file_too_large(e):
+    flash('Image is too large. Please upload a file smaller than 5MB.', 'error')
+    return redirect(request.referrer or url_for('admin_products')), 413
 
 # ── Auth helpers ──────────────────────────────────────────────────────────────
 
@@ -196,25 +205,32 @@ def allowed_file(fn): return '.' in fn and fn.rsplit('.',1)[1].lower() in ALLOWE
 
 def save_upload(file_obj):
     """Upload to Cloudinary and return the secure URL, or None on failure."""
-    if file_obj and file_obj.filename and allowed_file(file_obj.filename):
-        try:
-            result = cloudinary.uploader.upload(
-                file_obj,
-                folder="ammas_farm",
-                transformation=[{"width": 600, "crop": "limit"}]
-            )
-            return result['secure_url']
-        except Exception as e:
-            print(f"Cloudinary upload error: {e}")
-            return None
-    return None
+    if not file_obj or not file_obj.filename:
+        return None
+    if not allowed_file(file_obj.filename):
+        flash('Invalid file type. Please upload a PNG, JPG, GIF, or WEBP image.', 'error')
+        return None
+    try:
+        result = cloudinary.uploader.upload(
+            file_obj,
+            folder="ammas_farm",
+            transformation=[{"width": 600, "crop": "limit"}]
+        )
+        return result['secure_url']
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
+        flash('Image upload failed. The product was saved without an image.', 'warning')
+        return None
 
 def delete_image(image_val):
     """Delete image only if it's a local file (not a Cloudinary URL)."""
     if image_val and not image_val.startswith('http'):
         old_path = os.path.join(UPLOAD_FOLDER, image_val)
         if os.path.exists(old_path):
-            os.remove(old_path)
+            try:
+                os.remove(old_path)
+            except Exception as e:
+                print(f"Image deletion error: {e}")
 
 # ── Email via Resend ──────────────────────────────────────────────────────────
 
@@ -552,7 +568,6 @@ def admin_add_product():
                                       seasonal_availability=seasonal,
                                       category_id=cat_id, image=img)
         database.log_stock_change(pid, g.user['id'], 0, stock, note or 'Initial stock')
-        # ✅ Audit log: product added
         database.log_admin_action(
             g.user['id'], 'add_product', 'product', pid,
             {'name': name, 'price': price, 'stock': stock}
@@ -594,7 +609,6 @@ def admin_edit_product(product_id):
         database.update_product(product_id, **updates)
         if new_stock is not None:
             database.log_stock_change(product_id, g.user['id'], old_stock, new_stock, note)
-        # ✅ Audit log: product edited — record what changed
         changed = {}
         if updates['name'] != product['name']:
             changed['name'] = {'old': product['name'], 'new': updates['name']}
@@ -619,7 +633,6 @@ def admin_delete_product(product_id):
     if product:
         delete_image(product['image'])
         database.delete_product(product_id)
-        # ✅ Audit log: product deleted
         database.log_admin_action(
             g.user['id'], 'delete_product', 'product', product_id,
             {'name': product['name']}
@@ -640,7 +653,6 @@ def admin_categories():
                 database.create_category(name, icon)
                 if hasattr(app, '_cat_cache'):
                     app._cat_cache_time = 0
-                # ✅ Audit log: category added
                 database.log_admin_action(
                     g.user['id'], 'add_category', 'category', None,
                     {'name': name, 'icon': icon}
@@ -654,7 +666,6 @@ def admin_categories():
                 database.delete_category(cat_id)
                 if hasattr(app, '_cat_cache'):
                     app._cat_cache_time = 0
-                # ✅ Audit log: category deleted
                 database.log_admin_action(
                     g.user['id'], 'delete_category', 'category', cat_id, {}
                 )
@@ -691,7 +702,6 @@ def admin_update_order_status(order_id):
         order = database.get_order_full(order_id)
         old_status = order['order_status'] if order else '?'
         database.update_order_status(order_id, new_status)
-        # ✅ Audit log: order status changed
         database.log_admin_action(
             g.user['id'], 'update_order_status', 'order', order_id,
             {'old_status': old_status, 'new_status': new_status}
@@ -738,7 +748,6 @@ def admin_stock_logs():
     logs = database.get_stock_logs(limit=100)
     return render_template('admin/stock_logs.html', logs=logs)
 
-# ✅ FIXED: Missing audit log route
 @app.route('/admin/audit-log')
 @login_required
 @admin_required

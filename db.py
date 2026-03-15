@@ -34,12 +34,29 @@ def get_pool():
         _pool = psycopg2.pool.ThreadedConnectionPool(
             minconn=1,
             maxconn=10,
-            dsn=DATABASE_URL
+            dsn=DATABASE_URL,
+            keepalives=1,
+            keepalives_idle=30,
+            keepalives_interval=10,
+            keepalives_count=5
         )
     return _pool
 
 def get_conn():
-    return get_pool().getconn()
+    pool = get_pool()
+    conn = pool.getconn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+    except Exception:
+        # Stale connection (e.g. after Render spin-down / Neon idle timeout)
+        try:
+            pool.putconn(conn)
+        except Exception:
+            pass
+        conn = pool.getconn()
+    return conn
 
 def release_conn(conn):
     """Return connection to pool instead of closing it."""
@@ -178,7 +195,6 @@ def init_db():
             value TEXT DEFAULT ''
         )""")
 
-        # ✅ FIXED: Audit log table (Issue #12)
         cur.execute("""
         CREATE TABLE IF NOT EXISTS audit_logs (
             id SERIAL PRIMARY KEY,
@@ -210,7 +226,6 @@ def create_user(username, email, password, role='customer'):
         conn.commit()
         cur.close()
     except psycopg2.IntegrityError:
-        # ✅ FIXED: Re-raise for app.py to catch (Issue #3)
         conn.rollback()
         cur.close()
         raise
@@ -437,7 +452,6 @@ def get_all_products(search='', category_id=None):
 
 
 def count_products():
-    """Fast COUNT(*) instead of loading all rows."""
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -583,7 +597,6 @@ def get_cart_items(user_id):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        # ✅ FIXED: Changed JOIN to LEFT JOIN (Issue #8)
         cur.execute("""
             SELECT ci.id, ci.quantity,
                    p.id AS product_id, p.name, p.price, p.unit,
@@ -696,7 +709,6 @@ def create_order(user_id, total_amount, delivery_address, phone_number, notes, i
             """, (order_id, item['product_id'], item['name'],
                   item['price'], item['quantity'], item['unit']))
 
-            # ✅ FIXED: Better error message (Issue #2)
             cur.execute("""
                 UPDATE products
                 SET stock_quantity = stock_quantity - %s
@@ -741,7 +753,6 @@ def get_order_full(order_id):
 
 
 def get_my_orders(user_id, search='', status_filter=''):
-    """Fixed: uses a single JOIN query instead of N+1 queries."""
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -780,7 +791,6 @@ def get_my_orders(user_id, search='', status_filter=''):
 
 
 def get_all_orders(status_filter='', search=''):
-    """Fixed: uses a single JOIN query instead of N+1 queries."""
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -824,10 +834,6 @@ def get_all_orders(status_filter='', search=''):
 
 
 def _group_orders_with_items(rows, cols):
-    """
-    Helper: collapse JOIN rows (one per order_item) back into
-    a list of order dicts, each with an 'items' list.
-    """
     from collections import OrderedDict
     orders_map = OrderedDict()
     item_cols  = {'oi_id', 'product_name', 'product_price', 'oi_qty', 'oi_unit', 'oi_product_id'}
@@ -1017,16 +1023,8 @@ def get_all_settings():
 
 
 # ── Audit Logs ────────────────────────────────────────────────────────────────
-# ✅ FIXED: Admin action logging (Issue #12)
 
 def log_admin_action(admin_id, action, entity_type, entity_id, details=None):
-    """
-    Log admin actions for audit trail.
-    
-    Examples:
-    - log_admin_action(1, 'delete_product', 'product', 5, {'name': 'Tomato'})
-    - log_admin_action(1, 'update_order_status', 'order', 12, {'old_status': 'Pending', 'new_status': 'Shipped'})
-    """
     conn = get_conn()
     try:
         cur = conn.cursor()
@@ -1042,7 +1040,6 @@ def log_admin_action(admin_id, action, entity_type, entity_id, details=None):
 
 
 def get_audit_logs(limit=100):
-    """Retrieve admin action logs."""
     conn = get_conn()
     try:
         cur = conn.cursor()
