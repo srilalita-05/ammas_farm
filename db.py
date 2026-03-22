@@ -43,19 +43,33 @@ def get_pool():
     return _pool
 
 def get_conn():
+    global _pool
     pool = get_pool()
-    conn = pool.getconn()
+
+    # Guard: if the pool is exhausted (all slots dead/leaked), reset it entirely
+    try:
+        conn = pool.getconn()
+    except psycopg2.pool.PoolError:
+        try:
+            _pool.closeall()
+        except Exception:
+            pass
+        _pool = None
+        pool = get_pool()
+        conn = pool.getconn()
+
+    # Pre-ping: test the connection, and if stale, discard it with close=True
+    # so the dead connection is removed from the pool rather than recycled back in
     try:
         cur = conn.cursor()
         cur.execute("SELECT 1")
         cur.close()
     except Exception:
-        # Stale connection (e.g. after Render spin-down / Neon idle timeout)
         try:
-            pool.putconn(conn)
+            pool.putconn(conn, close=True)   # discard the dead connection permanently
         except Exception:
             pass
-        conn = pool.getconn()
+        conn = pool.getconn()                # fresh slot, fresh physical connection
     return conn
 
 def release_conn(conn):
