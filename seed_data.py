@@ -11,8 +11,8 @@ def seed():
     # ── 1. Admin user ─────────────────────────────────────────────────────────
     cur.execute("SELECT id FROM users WHERE username='admin'")
     if not cur.fetchone():
-        database.create_user('admin', 'admin@ammasfarm.com', 'admin123', role='admin')
-        print("✅ Admin user created  (admin / admin123)")
+        database.create_user('kavitha', 'admin@ammasfarm.com', 'bhuvana@123', role='admin')
+        print("✅ Admin user created  (kavitha / bhuvana@123)")
     else:
         print("ℹ️  Admin user already exists")
 
