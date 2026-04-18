@@ -32,10 +32,10 @@ ammas_farm/
 | Layer     | Technology                           |
 |-----------|--------------------------------------|
 | Backend   | Flask 3.x                            |
-| Database  | PostgreSQL (via psycopg2) — Neon DB |
+| Database  | PostgreSQL (via psycopg2) — Aiven    |
 | Auth      | Flask sessions + Werkzeug hashing    |
 | Frontend  | Jinja2 templates + custom CSS        |
-| Uploads   | Werkzeug secure_filename + UUID     |
+| Images    | Cloudinary CDN                       |
 
 ---
 
@@ -44,23 +44,24 @@ ammas_farm/
 ### Prerequisites
 - Python 3.10+
 - pip
-- PostgreSQL database (or Neon.tech free tier)
+- PostgreSQL database (or Aiven free tier)
 
 ### Install & Start
 ```bash
 # 1. Clone/cd into project
 cd ammas_farm
 
-# 2. Get a database URL from Neon.tech
-# - Go to https://neon.tech (free tier available)
-# - Create a new project and get your connection string
-# - It looks like: postgresql://user:password@host/database
+# 2. Get a database URL from Aiven
+# - Go to https://console.aiven.io (free tier available)
+# - Create a new PostgreSQL service
+# - Copy the Service URI from the connection details
+# - It looks like: postgresql://user:password@host:port/database?sslmode=require
 
 # 3. Install dependencies
 pip install -r requirements.txt
 
 # 4. Set environment variables
-export DATABASE_URL="postgresql://user:password@host/database"
+export DATABASE_URL="postgresql://user:password@host:port/database?sslmode=require"
 export SECRET_KEY="your-secret-key-here"
 
 # 5. Seed demo data (creates DB schema + demo users + 12 products)
@@ -76,11 +77,21 @@ python app.py
 
 ## 📊 Database Setup Details
 
-This app uses **PostgreSQL** with **Neon.tech** (recommended for easy deployment):
+This app uses **PostgreSQL** hosted on **Aiven** (recommended — no inactivity pausing on the free tier, 5 GB storage).
+
+### Aiven Setup (Recommended)
+
+1. Go to https://console.aiven.io and create a free account
+2. Create a new **PostgreSQL** service (free tier)
+3. Once the service is running, go to the **Connection Information** tab
+4. Copy the **Service URI** — it looks like `postgresql://avnadmin:password@host:port/defaultdb?sslmode=require`
+5. Set: `export DATABASE_URL="your-service-uri"`
+6. Run: `python seed_data.py`
+
+> **Note:** The `?sslmode=require` at the end of the URI is required by Aiven. psycopg2 handles it automatically — no code changes needed.
 
 ### Local PostgreSQL Setup (Alternative)
 
-If you want to run PostgreSQL locally instead of Neon:
 ```bash
 # macOS with Homebrew
 brew install postgresql
@@ -96,15 +107,6 @@ export DATABASE_URL="postgresql://postgres@localhost/ammas_farm"
 # Then run seed_data.py
 python seed_data.py
 ```
-
-### Neon.tech Setup (Recommended for Production)
-
-1. Go to https://neon.tech
-2. Sign up for free (includes $5 credit)
-3. Create a new project
-4. Copy the connection string (looks like `postgresql://...`)
-5. Set: `export DATABASE_URL="your-connection-string"`
-6. Run: `python seed_data.py`
 
 ---
 
@@ -192,7 +194,7 @@ python seed_data.py
 - ✅ Parameterized SQL queries (no injection)
 - ✅ Email domain whitelist (prevents spam signups)
 - ✅ Session-based authentication
-- ✅ Secure file uploads with UUID naming
+- ✅ Secure image uploads via Cloudinary
 - ✅ Stock validation at checkout (prevents overselling)
 - ✅ Audit logging of all admin actions
 
@@ -225,29 +227,22 @@ git push origin main
 # - Connect your GitHub repo
 # - Set environment variables:
 #   - SECRET_KEY: Generate strong random key
-#   - DATABASE_URL: From Neon.tech
+#   - DATABASE_URL: Service URI from Aiven (includes ?sslmode=require)
 #   - FLASK_ENV: production
+#   - CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 
 # 3. Deploy (auto-deploys on push to main)
 ```
 
 ### Environment Variables Required
 ```bash
-DATABASE_URL=postgresql://user:password@host/database
+DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
 SECRET_KEY=your-strong-secret-key-here
 FLASK_ENV=production
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
-
-### Image Upload to Cloud
-
-For production, replace local file uploads with cloud storage:
-```python
-# Option 1: AWS S3
-# Option 2: Cloudinary
-# Option 3: Google Cloud Storage
-```
-
-Currently uses local `/static/uploads` — fine for development, not for production.
 
 ---
 
