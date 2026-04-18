@@ -9,9 +9,9 @@ def seed():
     cur = conn.cursor()
 
     # ── 1. Admin user ─────────────────────────────────────────────────────────
-    cur.execute("SELECT id FROM users WHERE username='admin'")
+    cur.execute("SELECT id FROM users WHERE username='kavitha'")
     if not cur.fetchone():
-        database.create_user('kavitha', 'admin@ammasfarm.com', 'bhuvana@123', role='admin')
+        database.create_user('kavitha', 'ammafarmp@gmail.com', 'bhuvana@123', role='admin')
         print("✅ Admin user created  (kavitha / bhuvana@123)")
     else:
         print("ℹ️  Admin user already exists")
@@ -128,7 +128,7 @@ def seed():
     conn.close()
     print(f"✅ {len(products)} products seeded")
     print("\n🌾 Seed complete!")
-    print("   Admin login:    kavitha / bhuvana@123")
+    print("   Admin login:    kavitha / bhuvana@123  (ammafarmp@gmail.com)")
     print("   Customer login: customer1 / customer123")
     print("   URL:            http://localhost:5000")
 
