@@ -128,7 +128,7 @@ def seed():
     conn.close()
     print(f"✅ {len(products)} products seeded")
     print("\n🌾 Seed complete!")
-    print("   Admin login:    admin / admin123")
+    print("   Admin login:    kavitha / bhuvana@123")
     print("   Customer login: customer1 / customer123")
     print("   URL:            http://localhost:5000")
 

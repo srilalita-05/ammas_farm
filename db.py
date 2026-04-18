@@ -234,7 +234,9 @@ def create_user(username, email, password, role='customer'):
     try:
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO users (username, email, password_hash, role) VALUES (%s,%s,%s,%s)",
+            """INSERT INTO users (username, email, password_hash, role)
+               VALUES (%s,%s,%s,%s)
+               ON CONFLICT (username) DO NOTHING""",
             (username, email, generate_password_hash(password), role)
         )
         conn.commit()
