@@ -12,13 +12,13 @@ new_password = 'bhuvana@123'
 new_hash = generate_password_hash(new_password)
 
 cur.execute(
-    "UPDATE users SET password_hash = %s WHERE username = 'kavitha'",
+    "UPDATE users SET password_hash = %s, role = 'admin' WHERE username = 'kavitha'",
     (new_hash,)
 )
 
 conn.commit()
 
-cur.execute("SELECT username, role FROM users WHERE username = 'kavitha'")
+cur.execute("SELECT username, email, role FROM users WHERE username = 'kavitha'")
 print("Updated:", cur.fetchone())
 
 cur.close()
