@@ -309,9 +309,13 @@ def notify_order_placed(order, user):
         send_resend_email(admin_email, f"New Order #{order['id']} — ₹{order['total_amount']:.2f}", admin_html)
 
 # ── Root ──────────────────────────────────────────────────────────────────────
+@app.route('/landing')
+def landing():
+    return render_template('landing.html')
+
 
 @app.route('/')
-def index(): return redirect(url_for('shop'))
+def index(): return redirect(url_for('landing'))
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 

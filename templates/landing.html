@@ -1,0 +1,1714 @@
+{% extends 'base.html' %}
+{% block title %}Welcome — Amma's Farm 🌾{% endblock %}
+{% block content %}
+
+<!-- ─── LOADING OVERLAY ─────────────────────────────────────────── -->
+<div id="lp-ld">
+    <div id="lp-ld-box">
+        <svg id="lp-ld-farmer" viewBox="0 0 110 210" width="90" height="180" xmlns="http://www.w3.org/2000/svg">
+            <!-- shadow -->
+            <ellipse cx="55" cy="205" rx="28" ry="6" fill="rgba(0,0,0,0.15)" />
+            <!-- dhoti -->
+            <polygon points="32,200 78,200 74,140 36,140" fill="#F5F5F0" stroke="rgba(0,0,0,0.08)" stroke-width="0.6" />
+            <line x1="32" y1="193" x2="78" y2="193" stroke="rgba(0,0,0,0.07)" stroke-width="0.6" />
+            <line x1="55" y1="140" x2="55" y2="200" stroke="rgba(0,0,0,0.06)" stroke-width="0.5" />
+            <!-- kurta -->
+            <rect x="36" y="93" width="38" height="50" rx="4" fill="#2d5016" />
+            <line x1="55" y1="93" x2="55" y2="108" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+            <!-- left arm -->
+            <line x1="36" y1="103" x2="14" y2="126" stroke="#8B5E3C" stroke-width="5.5" stroke-linecap="round" />
+            <!-- right arm + hoe -->
+            <line x1="74" y1="103" x2="90" y2="130" stroke="#8B5E3C" stroke-width="5.5" stroke-linecap="round" />
+            <line x1="90" y1="130" x2="100" y2="185" stroke="#8B4513" stroke-width="3" stroke-linecap="round" />
+            <rect x="88" y="123" width="20" height="8" rx="2" fill="#607D8B" transform="rotate(-15,98,127)" />
+            <!-- neck -->
+            <rect x="51" y="84" width="8" height="12" fill="#8B5E3C" rx="1" />
+            <!-- head -->
+            <circle cx="55" cy="72" r="17" fill="#8B5E3C" />
+            <!-- eyes -->
+            <circle cx="48.5" cy="70" r="2.8" fill="#2C1810" />
+            <circle cx="61.5" cy="70" r="2.8" fill="#2C1810" />
+            <!-- smile -->
+            <path d="M48 77 Q55 82 62 77" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round" />
+            <!-- mustache -->
+            <path d="M48 73.5 Q55 71 62 73.5" stroke="#1A0A00" stroke-width="2.2" fill="none" stroke-linecap="round" />
+            <!-- turban body -->
+            <ellipse cx="55" cy="57" rx="20" ry="13" fill="#E53935" />
+            <!-- turban folds -->
+            <path d="M36 59 Q55 51 74 59" stroke="rgba(0,0,0,0.12)" stroke-width="1" fill="none" />
+            <path d="M37 63 Q55 55 73 63" stroke="rgba(0,0,0,0.09)" stroke-width="0.8" fill="none" />
+            <path d="M38 56 Q55 48 72 56" stroke="rgba(0,0,0,0.09)" stroke-width="0.8" fill="none" />
+            <!-- turban knot -->
+            <circle cx="74" cy="56" r="6" fill="#B71C1C" />
+            <!-- growing plant beside farmer -->
+            <g id="lp-plant">
+                <line x1="18" y1="200" x2="18" y2="160" stroke="#4a7c1f" stroke-width="3" stroke-linecap="round" />
+                <ellipse cx="10" cy="175" rx="10" ry="5" fill="#7ab648" transform="rotate(-20,10,175)" />
+                <ellipse cx="26" cy="170" rx="10" ry="5" fill="#4a7c1f" transform="rotate(15,26,170)" />
+                <ellipse cx="14" cy="162" rx="8" ry="4" fill="#7ab648" transform="rotate(-10,14,162)" />
+            </g>
+        </svg>
+        <div id="lp-ld-logo">🌾 Amma's Farm</div>
+        <div id="lp-ld-quote"></div>
+        <div id="lp-ld-bar">
+            <div id="lp-ld-fill"></div>
+        </div>
+        <div id="lp-ld-sub">Growing something fresh for you…</div>
+    </div>
+</div>
+
+<!-- ─── HERO ─────────────────────────────────────────────────────── -->
+<section id="lp-hero">
+    <canvas id="lp-canvas"></canvas>
+    <div id="lp-hero-overlay">
+        <div id="lp-hero-content">
+            <p id="lp-tagline">🌱 100% Organic &nbsp;•&nbsp; Farm Direct &nbsp;•&nbsp; No Chemicals</p>
+            <h1 id="lp-hero-title">Pure from the<br><span id="lp-title-accent">Soil of India</span></h1>
+            <p id="lp-hero-sub">Fresh vegetables, fruits, dairy &amp; more — straight from our hands to your home</p>
+            <div id="lp-hero-btns">
+                <a href="{{ url_for('shop') }}" class="lp-btn-primary">Shop Fresh Produce →</a>
+                <a href="{{ url_for('contact') }}" class="lp-btn-ghost">Contact Us</a>
+            </div>
+        </div>
+    </div>
+    <a href="#lp-carousel-sec" id="lp-scroll-down">
+        <span>Discover more</span>
+        <div id="lp-chevron">↓</div>
+    </a>
+</section>
+
+<!-- ─── BANNER CAROUSEL ───────────────────────────────────────────── -->
+<section id="lp-carousel-sec">
+    <div id="lp-carousel">
+        <div class="lp-slide lp-slide-0 lp-slide-active">
+            <div class="lp-slide-inner">
+                <div class="lp-slide-icon">🍅</div>
+                <div>
+                    <h2 class="lp-slide-title">Fresh Tomatoes</h2>
+                    <p class="lp-slide-sub">Sun-ripened on the vine, harvested every morning</p>
+                </div>
+            </div>
+        </div>
+        <div class="lp-slide lp-slide-1">
+            <div class="lp-slide-inner">
+                <div class="lp-slide-icon">🚜</div>
+                <div>
+                    <h2 class="lp-slide-title">Farm Direct</h2>
+                    <p class="lp-slide-sub">Zero middlemen — straight from our soil to your door</p>
+                </div>
+            </div>
+        </div>
+        <div class="lp-slide lp-slide-2">
+            <div class="lp-slide-inner">
+                <div class="lp-slide-icon">📦</div>
+                <div>
+                    <h2 class="lp-slide-title">Order Today</h2>
+                    <p class="lp-slide-sub">Place your order and receive same-day delivery</p>
+                </div>
+            </div>
+        </div>
+        <div class="lp-slide lp-slide-3">
+            <div class="lp-slide-inner">
+                <div class="lp-slide-icon">🌱</div>
+                <div>
+                    <h2 class="lp-slide-title">100% Organic</h2>
+                    <p class="lp-slide-sub">No pesticides, no chemicals — just nature's best</p>
+                </div>
+            </div>
+        </div>
+        <div class="lp-slide lp-slide-4">
+            <div class="lp-slide-inner">
+                <div class="lp-slide-icon">🥛</div>
+                <div>
+                    <h2 class="lp-slide-title">Dairy Fresh</h2>
+                    <p class="lp-slide-sub">A2 cow milk, morning ghee — collected before sunrise</p>
+                </div>
+            </div>
+        </div>
+        <div id="lp-carousel-dots">
+            <button class="lp-dot lp-dot-active" data-slide="0"></button>
+            <button class="lp-dot" data-slide="1"></button>
+            <button class="lp-dot" data-slide="2"></button>
+            <button class="lp-dot" data-slide="3"></button>
+            <button class="lp-dot" data-slide="4"></button>
+        </div>
+        <button id="lp-prev" class="lp-carousel-btn">‹</button>
+        <button id="lp-next" class="lp-carousel-btn">›</button>
+    </div>
+</section>
+
+<!-- ─── WHAT WE GROW ──────────────────────────────────────────────── -->
+<section class="lp-section" id="lp-cats-sec">
+    <div class="lp-sec-head">
+        <h2>What We Grow</h2>
+        <p>Six farm-fresh categories for your daily needs</p>
+    </div>
+    <div id="lp-cats-grid">
+
+        <div class="lp-flip-card">
+            <div class="lp-flip-inner">
+                <div class="lp-flip-front" style="--fc:#2d5016">
+                    <div class="lp-flip-icon">🥦</div>
+                    <div class="lp-flip-name">Vegetables</div>
+                    <div class="lp-flip-hint">Hover to learn more</div>
+                </div>
+                <div class="lp-flip-back" style="--fc:#1b5e20">
+                    <div class="lp-flip-back-icon">🥦</div>
+                    <p>Tomatoes, potatoes, spinach, drumstick &amp; more. Grown in rich Telangana soil.</p>
+                    <a href="{{ url_for('shop', category=1) }}" class="lp-flip-link">Shop Vegetables →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="lp-flip-card">
+            <div class="lp-flip-inner">
+                <div class="lp-flip-front" style="--fc:#e65100">
+                    <div class="lp-flip-icon">🍎</div>
+                    <div class="lp-flip-name">Fruits</div>
+                    <div class="lp-flip-hint">Hover to learn more</div>
+                </div>
+                <div class="lp-flip-back" style="--fc:#bf360c">
+                    <div class="lp-flip-back-icon">🍎</div>
+                    <p>Alphonso mangoes, Nendran bananas, guava — picked at peak ripeness.</p>
+                    <a href="{{ url_for('shop', category=2) }}" class="lp-flip-link">Shop Fruits →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="lp-flip-card">
+            <div class="lp-flip-inner">
+                <div class="lp-flip-front" style="--fc:#1565c0">
+                    <div class="lp-flip-icon">🥛</div>
+                    <div class="lp-flip-name">Dairy</div>
+                    <div class="lp-flip-hint">Hover to learn more</div>
+                </div>
+                <div class="lp-flip-back" style="--fc:#0d47a1">
+                    <div class="lp-flip-back-icon">🥛</div>
+                    <p>A2 cow milk &amp; slow-churned desi ghee. Collected every morning, no preservatives.</p>
+                    <a href="{{ url_for('shop', category=3) }}" class="lp-flip-link">Shop Dairy →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="lp-flip-card">
+            <div class="lp-flip-inner">
+                <div class="lp-flip-front" style="--fc:#827717">
+                    <div class="lp-flip-icon">🌾</div>
+                    <div class="lp-flip-name">Grains</div>
+                    <div class="lp-flip-hint">Hover to learn more</div>
+                </div>
+                <div class="lp-flip-back" style="--fc:#f57f17">
+                    <div class="lp-flip-back-icon">🌾</div>
+                    <p>Hand-pounded brown rice &amp; whole grains. Full fibre, full flavour — nothing removed.</p>
+                    <a href="{{ url_for('shop', category=4) }}" class="lp-flip-link">Shop Grains →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="lp-flip-card">
+            <div class="lp-flip-inner">
+                <div class="lp-flip-front" style="--fc:#2e7d32">
+                    <div class="lp-flip-icon">🌿</div>
+                    <div class="lp-flip-name">Herbs</div>
+                    <div class="lp-flip-hint">Hover to learn more</div>
+                </div>
+                <div class="lp-flip-back" style="--fc:#1b5e20">
+                    <div class="lp-flip-back-icon">🌿</div>
+                    <p>Fresh curry leaves, coriander &amp; more. Cut daily from our grove — fragrance guaranteed.</p>
+                    <a href="{{ url_for('shop', category=5) }}" class="lp-flip-link">Shop Herbs →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="lp-flip-card">
+            <div class="lp-flip-inner">
+                <div class="lp-flip-front" style="--fc:#6a1b9a">
+                    <div class="lp-flip-icon">🥚</div>
+                    <div class="lp-flip-name">Eggs</div>
+                    <div class="lp-flip-hint">Hover to learn more</div>
+                </div>
+                <div class="lp-flip-back" style="--fc:#4a148c">
+                    <div class="lp-flip-back-icon">🥚</div>
+                    <p>Free-range country eggs from desi hens. Rich orange yolks — worlds apart from store eggs.</p>
+                    <a href="{{ url_for('shop', category=6) }}" class="lp-flip-link">Shop Eggs →</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ─── STATS STRIP ───────────────────────────────────────────────── -->
+<section id="lp-stats">
+    <div class="lp-stat">
+        <div class="lp-stat-num" data-target="12" data-suffix="+">0</div>
+        <div class="lp-stat-label">Products</div>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+        <div class="lp-stat-num" data-target="100" data-suffix="%">0</div>
+        <div class="lp-stat-label">Organic</div>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+        <div class="lp-stat-num" data-target="5" data-suffix="">0</div>
+        <div class="lp-stat-label">Farm Families</div>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+        <div class="lp-stat-num" data-target="0" data-suffix="" data-text="Same Day">0</div>
+        <div class="lp-stat-label">Delivery</div>
+    </div>
+</section>
+
+<!-- ─── TESTIMONIALS TICKER ───────────────────────────────────────── -->
+<section class="lp-section" id="lp-test-sec">
+    <div class="lp-sec-head">
+        <h2>What Our Customers Say</h2>
+        <p>Real people, real produce, real stories</p>
+    </div>
+    <div id="lp-tick-wrap">
+        <div id="lp-ticker">
+            <div class="lp-tick-item">"Absolutely fresh! Got tomatoes still warm from the sun. — <strong>Priya R.,
+                    Hyderabad</strong>"</div>
+            <div class="lp-tick-item">"Best ghee I've ever tasted. Amma's Farm is our weekly staple. — <strong>Suresh
+                    M., Kukatpally</strong>"</div>
+            <div class="lp-tick-item">"Real farm eggs taste completely different. My kids love them! — <strong>Anitha
+                    K., KPHB</strong>"</div>
+            <div class="lp-tick-item">"Curry leaves this fresh are impossible to find in stores! — <strong>Kavitha L.,
+                    Miyapur</strong>"</div>
+            <div class="lp-tick-item">"Quick delivery, beautiful packaging. Feels like getting a gift! — <strong>Ramesh
+                    T., Hitech City</strong>"</div>
+            <div class="lp-tick-item">"The A2 milk tastes just like my grandmother used to serve us. — <strong>Deepa S.,
+                    Madhapur</strong>"</div>
+            <div class="lp-tick-item">"Alphonso mangoes from here are genuinely the best I've had. — <strong>Vijay P.,
+                    Kondapur</strong>"</div>
+            <!-- duplicate for seamless loop -->
+            <div class="lp-tick-item">"Absolutely fresh! Got tomatoes still warm from the sun. — <strong>Priya R.,
+                    Hyderabad</strong>"</div>
+            <div class="lp-tick-item">"Best ghee I've ever tasted. Amma's Farm is our weekly staple. — <strong>Suresh
+                    M., Kukatpally</strong>"</div>
+            <div class="lp-tick-item">"Real farm eggs taste completely different. My kids love them! — <strong>Anitha
+                    K., KPHB</strong>"</div>
+            <div class="lp-tick-item">"Curry leaves this fresh are impossible to find in stores! — <strong>Kavitha L.,
+                    Miyapur</strong>"</div>
+            <div class="lp-tick-item">"Quick delivery, beautiful packaging. Feels like getting a gift! — <strong>Ramesh
+                    T., Hitech City</strong>"</div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── FINAL CTA ─────────────────────────────────────────────────── -->
+<section id="lp-cta-sec">
+    <div id="lp-cta-inner">
+        <div id="lp-cta-deco-l">🌾</div>
+        <div id="lp-cta-text">
+            <h2>Ready to taste the difference?</h2>
+            <p>Browse 12+ fresh organic products. Delivered same day to your door.</p>
+            <a href="{{ url_for('shop') }}" id="lp-cta-big-btn">
+                Shop Fresh Now →
+            </a>
+            <p id="lp-cta-small">No subscription needed &nbsp;•&nbsp; Order any time &nbsp;•&nbsp; Genuine farm produce
+            </p>
+        </div>
+        <div id="lp-cta-deco-r">🌿</div>
+    </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────────
+     STYLES
+     ───────────────────────────────────────────────────────────────── -->
+<style>
+    /* ── LOADING OVERLAY ──────────────────────────────────────────────── */
+    #lp-ld {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: var(--cream, #fdf6e3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity .55s ease, visibility .55s ease;
+    }
+
+    #lp-ld.lp-ld-gone {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    #lp-ld-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .8rem;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    #lp-ld-farmer {
+        animation: lp-sway 3s ease-in-out infinite;
+        transform-origin: 55px 200px;
+        filter: drop-shadow(0 8px 16px rgba(45, 80, 22, .2));
+    }
+
+    @keyframes lp-sway {
+
+        0%,
+        100% {
+            transform: rotate(-1.5deg);
+        }
+
+        50% {
+            transform: rotate(1.5deg);
+        }
+    }
+
+    #lp-plant {
+        animation: lp-grow .6s ease-out both;
+        transform-origin: 18px 200px;
+    }
+
+    @keyframes lp-grow {
+        from {
+            transform: scaleY(0);
+        }
+
+        to {
+            transform: scaleY(1);
+        }
+    }
+
+    #lp-ld-logo {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--green-dark, #2d5016);
+        letter-spacing: -.5px;
+    }
+
+    #lp-ld-quote {
+        font-size: 1.02rem;
+        color: #4a7c1f;
+        font-style: italic;
+        max-width: 280px;
+        line-height: 1.55;
+        min-height: 2.5rem;
+        animation: lp-qi .4s ease;
+    }
+
+    @keyframes lp-qi {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    #lp-ld-bar {
+        width: 200px;
+        height: 5px;
+        background: #d4c9a8;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+
+    #lp-ld-fill {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, #4a7c1f, #7ab648);
+        border-radius: 99px;
+        animation: lp-bar 2.6s linear forwards;
+    }
+
+    @keyframes lp-bar {
+        to {
+            width: 100%;
+        }
+    }
+
+    #lp-ld-sub {
+        font-size: .8rem;
+        color: #a09070;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────────────── */
+    #lp-hero {
+        position: relative;
+        width: 100%;
+        height: 92vh;
+        min-height: 480px;
+        overflow: hidden;
+    }
+
+    #lp-canvas {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    #lp-hero-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 8vh;
+        background: linear-gradient(to right, rgba(20, 50, 8, .65) 0%, rgba(20, 50, 8, .3) 55%, transparent 100%);
+    }
+
+    #lp-hero-content {
+        padding: 0 2.5rem;
+        max-width: 540px;
+    }
+
+    #lp-tagline {
+        font-size: .82rem;
+        font-weight: 600;
+        color: #b9f297;
+        letter-spacing: .8px;
+        text-transform: uppercase;
+        margin-bottom: .7rem;
+    }
+
+    #lp-hero-title {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.12;
+        margin-bottom: .8rem;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+    }
+
+    #lp-title-accent {
+        color: #a5d96a;
+    }
+
+    #lp-hero-sub {
+        font-size: .98rem;
+        color: rgba(255, 255, 255, .86);
+        line-height: 1.65;
+        margin-bottom: 1.5rem;
+        max-width: 420px;
+    }
+
+    #lp-hero-btns {
+        display: flex;
+        gap: .85rem;
+        flex-wrap: wrap;
+    }
+
+    .lp-btn-primary {
+        display: inline-block;
+        background: linear-gradient(135deg, #4a7c1f, #2d5016);
+        color: #fff !important;
+        padding: .7rem 1.8rem;
+        border-radius: 50px;
+        font-size: .92rem;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 6px 22px rgba(45, 80, 22, .45);
+        transition: transform .18s, box-shadow .18s;
+        animation: lp-pulse 2.5s infinite;
+    }
+
+    .lp-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(45, 80, 22, .5);
+        color: #fff !important;
+    }
+
+    @keyframes lp-pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 6px 22px rgba(45, 80, 22, .45);
+        }
+
+        50% {
+            box-shadow: 0 6px 28px rgba(74, 124, 31, .65);
+        }
+    }
+
+    .lp-btn-ghost {
+        display: inline-block;
+        border: 2px solid rgba(255, 255, 255, .7);
+        color: #fff !important;
+        padding: .68rem 1.5rem;
+        border-radius: 50px;
+        font-size: .92rem;
+        font-weight: 600;
+        text-decoration: none;
+        backdrop-filter: blur(4px);
+        transition: background .18s, border-color .18s;
+    }
+
+    .lp-btn-ghost:hover {
+        background: rgba(255, 255, 255, .15);
+        border-color: #fff;
+        color: #fff !important;
+    }
+
+    #lp-scroll-down {
+        position: absolute;
+        bottom: 1.4rem;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255, 255, 255, .8);
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .25rem;
+        font-size: .75rem;
+        letter-spacing: .5px;
+        animation: lp-bob 2s ease-in-out infinite;
+    }
+
+    @keyframes lp-bob {
+
+        0%,
+        100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(6px);
+        }
+    }
+
+    #lp-chevron {
+        font-size: 1.2rem;
+    }
+
+    /* ── BANNER CAROUSEL ────────────────────────────────────────────────── */
+    #lp-carousel-sec {
+        background: #fff;
+    }
+
+    #lp-carousel {
+        position: relative;
+        overflow: hidden;
+        height: 140px;
+    }
+
+    .lp-slide {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity .6s ease;
+    }
+
+    .lp-slide-active {
+        opacity: 1;
+    }
+
+    .lp-slide-0 {
+        background: linear-gradient(135deg, #b71c1c, #e53935);
+    }
+
+    .lp-slide-1 {
+        background: linear-gradient(135deg, #1b5e20, #4caf50);
+    }
+
+    .lp-slide-2 {
+        background: linear-gradient(135deg, #e65100, #ff7043);
+    }
+
+    .lp-slide-3 {
+        background: linear-gradient(135deg, #33691e, #7cb342);
+    }
+
+    .lp-slide-4 {
+        background: linear-gradient(135deg, #0d47a1, #1976d2);
+    }
+
+    .lp-slide-inner {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        color: #fff;
+        padding: 0 2rem;
+    }
+
+    .lp-slide-icon {
+        font-size: 3rem;
+        flex-shrink: 0;
+    }
+
+    .lp-slide-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0 0 .2rem;
+    }
+
+    .lp-slide-sub {
+        font-size: .92rem;
+        opacity: .9;
+        margin: 0;
+    }
+
+    #lp-carousel-dots {
+        position: absolute;
+        bottom: .7rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: .5rem;
+    }
+
+    .lp-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .45);
+        border: none;
+        cursor: pointer;
+        transition: background .2s, transform .2s;
+    }
+
+    .lp-dot-active {
+        background: #fff;
+        transform: scale(1.25);
+    }
+
+    .lp-carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, .25);
+        border: none;
+        color: #fff;
+        font-size: 1.8rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background .15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .lp-carousel-btn:hover {
+        background: rgba(255, 255, 255, .45);
+    }
+
+    #lp-prev {
+        left: .75rem;
+    }
+
+    #lp-next {
+        right: .75rem;
+    }
+
+    /* ── SECTIONS COMMON ────────────────────────────────────────────────── */
+    .lp-section {
+        padding: 3.5rem 1.25rem;
+        max-width: 1180px;
+        margin: 0 auto;
+    }
+
+    .lp-sec-head {
+        text-align: center;
+        margin-bottom: 2.2rem;
+    }
+
+    .lp-sec-head h2 {
+        font-size: 1.9rem;
+        font-weight: 800;
+        color: var(--green-dark, #2d5016);
+        margin-bottom: .4rem;
+    }
+
+    .lp-sec-head p {
+        color: var(--text-muted, #6b7280);
+        font-size: .95rem;
+    }
+
+    /* ── 3D FLIP CARDS ──────────────────────────────────────────────────── */
+    #lp-cats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1.2rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 1.25rem 3.5rem;
+    }
+
+    .lp-flip-card {
+        perspective: 1100px;
+        height: 200px;
+        cursor: pointer;
+    }
+
+    .lp-flip-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        transition: transform .62s cubic-bezier(.34, 1.08, .64, 1);
+    }
+
+    .lp-flip-card:hover .lp-flip-inner {
+        transform: rotateY(180deg);
+    }
+
+    .lp-flip-front,
+    .lp-flip-back {
+        position: absolute;
+        inset: 0;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.2rem;
+        text-align: center;
+    }
+
+    .lp-flip-front {
+        background: var(--fc, #2d5016);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, .15);
+    }
+
+    .lp-flip-icon {
+        font-size: 2.8rem;
+        margin-bottom: .5rem;
+    }
+
+    .lp-flip-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: .3rem;
+    }
+
+    .lp-flip-hint {
+        font-size: .7rem;
+        color: rgba(255, 255, 255, .65);
+    }
+
+    .lp-flip-back {
+        background: var(--fc, #1b5e20);
+        transform: rotateY(180deg);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, .2);
+        gap: .55rem;
+    }
+
+    .lp-flip-back-icon {
+        font-size: 1.8rem;
+    }
+
+    .lp-flip-back p {
+        font-size: .83rem;
+        color: rgba(255, 255, 255, .92);
+        line-height: 1.55;
+        margin: 0;
+    }
+
+    .lp-flip-link {
+        display: inline-block;
+        margin-top: .35rem;
+        background: rgba(255, 255, 255, .22);
+        color: #fff !important;
+        padding: .38rem 1rem;
+        border-radius: 20px;
+        font-size: .78rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background .15s;
+    }
+
+    .lp-flip-link:hover {
+        background: rgba(255, 255, 255, .38);
+        color: #fff !important;
+    }
+
+    /* ── STATS STRIP ────────────────────────────────────────────────────── */
+    #lp-stats {
+        background: linear-gradient(135deg, #2d5016 0%, #4a7c1f 100%);
+        padding: 2.4rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        flex-wrap: wrap;
+    }
+
+    .lp-stat {
+        text-align: center;
+        padding: .8rem 2.4rem;
+        flex: 1;
+        min-width: 130px;
+    }
+
+    .lp-stat-num {
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: #a5d96a;
+        line-height: 1;
+        margin-bottom: .3rem;
+    }
+
+    .lp-stat-label {
+        font-size: .84rem;
+        color: rgba(255, 255, 255, .8);
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        font-weight: 600;
+    }
+
+    .lp-stat-div {
+        width: 1px;
+        height: 50px;
+        background: rgba(255, 255, 255, .2);
+        flex-shrink: 0;
+    }
+
+    @media(max-width:600px) {
+        .lp-stat-div {
+            display: none;
+        }
+    }
+
+    /* ── TESTIMONIALS TICKER ────────────────────────────────────────────── */
+    #lp-test-sec {
+        overflow: hidden;
+    }
+
+    #lp-tick-wrap {
+        overflow: hidden;
+        border: 1px solid var(--border, #d4c9a8);
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    #lp-ticker {
+        display: flex;
+        gap: 0;
+        animation: lp-tick 38s linear infinite;
+        width: max-content;
+    }
+
+    #lp-ticker:hover {
+        animation-play-state: paused;
+    }
+
+    @keyframes lp-tick {
+        0% {
+            transform: translateX(0);
+        }
+
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    .lp-tick-item {
+        white-space: nowrap;
+        padding: 1.1rem 2.4rem;
+        font-size: .9rem;
+        color: var(--text, #2c2c2c);
+        border-right: 1px solid var(--border, #d4c9a8);
+        min-width: 380px;
+    }
+
+    /* ── FINAL CTA ──────────────────────────────────────────────────────── */
+    #lp-cta-sec {
+        background: var(--cream, #fdf6e3);
+        padding: 4rem 1.25rem;
+        border-top: 1px solid var(--border, #d4c9a8);
+    }
+
+    #lp-cta-inner {
+        max-width: 680px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        justify-content: center;
+    }
+
+    #lp-cta-text {
+        text-align: center;
+    }
+
+    #lp-cta-text h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--green-dark, #2d5016);
+        margin-bottom: .5rem;
+    }
+
+    #lp-cta-text p {
+        color: var(--text-muted, #6b7280);
+        margin-bottom: 1.5rem;
+    }
+
+    #lp-cta-big-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #4a7c1f, #2d5016);
+        color: #fff !important;
+        padding: .9rem 2.8rem;
+        border-radius: 50px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        text-decoration: none;
+        letter-spacing: .2px;
+        box-shadow: 0 8px 26px rgba(45, 80, 22, .4);
+        transition: transform .18s, box-shadow .18s;
+    }
+
+    #lp-cta-big-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 34px rgba(45, 80, 22, .5);
+        color: #fff !important;
+    }
+
+    #lp-cta-small {
+        font-size: .78rem;
+        color: #a09070;
+        margin-top: .75rem;
+    }
+
+    #lp-cta-deco-l,
+    #lp-cta-deco-r {
+        font-size: 3.5rem;
+        flex-shrink: 0;
+        animation: lp-sway 4s ease-in-out infinite;
+        transform-origin: center bottom;
+    }
+
+    #lp-cta-deco-r {
+        animation-direction: alternate-reverse;
+    }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────────────── */
+    @media(max-width:768px) {
+        #lp-hero {
+            height: 75vh;
+        }
+
+        #lp-hero-content {
+            padding: 0 1.25rem;
+        }
+
+        #lp-hero-title {
+            font-size: 1.8rem;
+        }
+
+        #lp-carousel {
+            height: 120px;
+        }
+
+        .lp-slide-icon {
+            font-size: 2rem;
+        }
+
+        .lp-slide-title {
+            font-size: 1.2rem;
+        }
+
+        #lp-cats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .lp-flip-card {
+            height: 175px;
+        }
+
+        #lp-cta-deco-l,
+        #lp-cta-deco-r {
+            display: none;
+        }
+    }
+
+    @media(max-width:480px) {
+        #lp-hero-btns {
+            flex-direction: column;
+        }
+
+        #lp-stats {
+            gap: 0;
+        }
+    }
+</style>
+
+<!-- ─────────────────────────────────────────────────────────────────
+     SCRIPTS
+     ───────────────────────────────────────────────────────────────── -->
+<script>
+    (function () {
+
+        /* ══════════════════════════════════════════════════════
+           LOADING SCREEN
+           ══════════════════════════════════════════════════════ */
+        const LOAD_QUOTES = [
+            'Fresh from our hands to your heart 🌾',
+            'Grown with love, harvested with care 🌱',
+            'Nature\'s freshest, at your door 🍅',
+            'Pure soil, pure taste, pure health 🌿',
+            'Farm to your family, every single day 🥬',
+            'Seeds of health sown just for you 🌻',
+            'The earth\'s best for your table 🥗',
+            'Fresh today, because we care 💚',
+            'No chemicals, only love and sunshine ☀️',
+            'Straight from the soil — just for you 🙏',
+        ];
+
+        const ldEl = document.getElementById('lp-ld');
+        const qdEl = document.getElementById('lp-ld-quote');
+        if (qdEl) qdEl.textContent = LOAD_QUOTES[Math.floor(Math.random() * LOAD_QUOTES.length)];
+
+        setTimeout(() => { if (ldEl) ldEl.classList.add('lp-ld-gone'); }, 2700);
+
+
+        /* ══════════════════════════════════════════════════════
+           HERO CANVAS ANIMATION
+           ══════════════════════════════════════════════════════ */
+        const canvas = document.getElementById('lp-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let W = 0, H = 0, t = 0;
+
+        // Static noise array for pseudo-random but stable values
+        const RND = Array.from({ length: 600 }, () => Math.random());
+
+        // Scene objects
+        let clouds = [], birds = [], farmers = [];
+
+        const FARMER_DEFS = [
+            { xf: .10, yf: .88, sex: 'm', kurta: '#1565C0', turban: '#F9A825', tool: 'hoe' },
+            { xf: .29, yf: .90, sex: 'f', saree: '#7B1FA2', tool: 'basket' },
+            { xf: .50, yf: .85, sex: 'm', kurta: '#BF360C', turban: '#33691E', tool: 'sickle' },
+            { xf: .71, yf: .90, sex: 'f', saree: '#B71C1C', tool: 'sheaf' },
+            { xf: .89, yf: .86, sex: 'm', kurta: '#1B5E20', turban: '#F57C00', tool: 'pluck' },
+        ];
+
+        const FARMER_QUOTES = [
+            '🌱 Harvested\nthis morning!',
+            '💚 No chemicals,\nonly love!',
+            '🙏 Your health is\nour harvest!',
+            '🌾 Straight from\nour soil!',
+            '📦 Order now,\ntaste tomorrow!',
+            '✨ Farm-fresh\nfor you!',
+            '🥗 Nature\'s best,\njust for you!',
+            '🌿 We grow\nwith care!',
+            '☀️ Grown in\nsunshine!',
+            '💛 Pure love in\nevery bite!',
+        ];
+
+        function initScene() {
+            W = canvas.width = canvas.parentElement.offsetWidth || window.innerWidth;
+            H = canvas.height = canvas.parentElement.offsetHeight || window.innerHeight;
+
+            clouds = Array.from({ length: Math.floor(W / 180) + 4 }, (_, i) => ({
+                x: RND[i * 3] * W * 1.3 - W * .05,
+                y: H * (0.03 + RND[i * 3 + 1] * 0.16),
+                r: W * (0.032 + RND[i * 3 + 2] * 0.04),
+                spd: 0.16 + RND[i * 5] * 0.22,
+                op: 0.6 + RND[i * 7] * 0.35,
+            }));
+
+            birds = Array.from({ length: Math.min(9, Math.floor(W / 110)) }, (_, i) => ({
+                x: RND[i * 11 + 100] * W,
+                y: H * (0.06 + RND[i * 11 + 101] * 0.14),
+                spd: 0.5 + RND[i * 11 + 102] * 0.8,
+                wph: RND[i * 11 + 103] * Math.PI * 2,
+                sz: 3 + RND[i * 11 + 104] * 4,
+            }));
+
+            farmers = FARMER_DEFS.map((d, i) => ({
+                ...d,
+                x: 0, y: 0,
+                state: 'work',
+                phase: RND[i * 17 + 200] * Math.PI * 2,
+                timer: 200 + i * 100 + Math.floor(RND[i * 17 + 201] * 250),
+                bubTimer: 0,
+                quote: '',
+            }));
+        }
+
+        /* ── Draw helpers ── */
+        function rrect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.arcTo(x + w, y, x + w, y + r, r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+            ctx.lineTo(x + r, y + h);
+            ctx.arcTo(x, y + h, x, y + h - r, r);
+            ctx.lineTo(x, y + r);
+            ctx.arcTo(x, y, x + r, y, r);
+            ctx.closePath();
+        }
+        function lightenHex(hex, n) {
+            const m = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!m) return hex;
+            return `rgb(${Math.min(255, parseInt(m[1], 16) + n)},${Math.min(255, parseInt(m[2], 16) + n)},${Math.min(255, parseInt(m[3], 16) + n)})`;
+        }
+        function darkenHex(hex, n) {
+            const m = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!m) return hex;
+            return `rgb(${Math.max(0, parseInt(m[1], 16) - n)},${Math.max(0, parseInt(m[2], 16) - n)},${Math.max(0, parseInt(m[3], 16) - n)})`;
+        }
+
+        /* ── Sky, sun, clouds, birds ── */
+        function drawSky() {
+            const g = ctx.createLinearGradient(0, 0, 0, H * .6);
+            g.addColorStop(0, '#2575B8');
+            g.addColorStop(.42, '#87CEEB');
+            g.addColorStop(1, '#FFE7A0');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H * .6);
+        }
+
+        function drawSun() {
+            const sx = W * .87, sy = H * .09, sr = Math.min(W, H) * .038;
+            const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 4);
+            g.addColorStop(0, 'rgba(255,235,80,.62)');
+            g.addColorStop(.55, 'rgba(255,225,60,.12)');
+            g.addColorStop(1, 'rgba(255,225,60,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.arc(sx, sy, sr * 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,200,.55)';
+            ctx.beginPath(); ctx.arc(sx, sy, sr * .6, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function drawCloud(c) {
+            ctx.save(); ctx.globalAlpha = c.op; ctx.fillStyle = '#FFF';
+            [[0, 0, 1], [1.2, .1, .8], [-.95, .18, .7], [.32, -.38, .56]].forEach(([dx, dy, sc]) => {
+                ctx.beginPath();
+                ctx.ellipse(c.x + dx * c.r, c.y + dy * c.r, c.r * sc, c.r * sc * .68, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        function drawBird(b) {
+            const fl = Math.sin(t * 4 + b.wph) * b.sz * .9;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(35,35,55,.65)'; ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(b.x - b.sz, b.y + fl);
+            ctx.quadraticCurveTo(b.x, b.y, b.x + b.sz, b.y + fl);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        /* ── Hills ── */
+        function drawHills() {
+            const GY = H * .58;
+            [[.74, '#A5D6A7', 1.1, .065, .05], [.85, '#66BB6A', 1.4, .048, .033], [.94, '#43A047', 1.8, .032, .022]].forEach(([yf, col, freq, amp1, amp2]) => {
+                ctx.fillStyle = col;
+                ctx.beginPath();
+                for (let i = 0; i <= 22; i++) {
+                    const x = (i / 22) * W;
+                    const y = H * yf + Math.sin(i * freq + .8) * H * amp1 + Math.sin(i * (freq * .4) + 2) * H * amp2;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+                ctx.lineTo(W, H * .6); ctx.lineTo(0, H * .6); ctx.fill();
+            });
+        }
+
+        /* ── Ground base ── */
+        function drawGround() {
+            const GY = H * .58;
+            const g = ctx.createLinearGradient(0, GY, 0, H);
+            g.addColorStop(0, '#6D4C41'); g.addColorStop(1, '#3E2723');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, GY, W, H - GY);
+            // Zone dividers
+            [1, 2, 3, 4].forEach(i => {
+                ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(W / 5 * i, GY); ctx.lineTo(W / 5 * i, H); ctx.stroke();
+            });
+        }
+
+        /* ── Crop zones ── */
+        const GYF = .58;
+
+        function drawPaddyZone(zx, zy, zw, zh) {
+            const g = ctx.createLinearGradient(0, zy, 0, zy + zh);
+            g.addColorStop(0, '#A5D6A7'); g.addColorStop(1, '#66BB6A');
+            ctx.fillStyle = g; ctx.fillRect(zx, zy, zw, zh);
+            // water shimmer rows
+            for (let i = 0; i < 4; i++) {
+                const ly = zy + zh * (.12 + i * .2);
+                ctx.strokeStyle = `rgba(80,190,220,${.07 + Math.sin(t * 1.4 + i) * .035})`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(zx, ly); ctx.lineTo(zx + zw, ly); ctx.stroke();
+            }
+            // rice stalks
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < Math.floor(zw / 26) + 1; c++) {
+                    const sx = zx + (c / (Math.floor(zw / 26) + 1)) * zw + zw / (Math.floor(zw / 26) + 1) / 2;
+                    const sy = zy + zh * .1 + (r / 5) * zh * .76;
+                    const sh = zh * .145, sw = Math.sin(t * .8 + c * .65 + r * .5) * 2.8;
+                    ctx.strokeStyle = '#2E7D32'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(sx, sy + sh);
+                    ctx.quadraticCurveTo(sx + sw * .5, sy + sh * .5, sx + sw, sy); ctx.stroke();
+                    // grain ears
+                    ctx.strokeStyle = '#81C784'; ctx.lineWidth = 1.2;
+                    for (let g2 = -1; g2 <= 1; g2++) {
+                        ctx.beginPath(); ctx.moveTo(sx + sw, sy); ctx.lineTo(sx + sw + g2 * 4, sy - 5.5); ctx.stroke();
+                    }
+                }
+            }
+            zoneLabel(zx, zy, zw, zh, 'Paddy');
+        }
+
+        function drawVeggieZone(zx, zy, zw, zh) {
+            ctx.fillStyle = '#4E342E'; ctx.fillRect(zx, zy, zw, zh);
+            for (let r = 0; r < 6; r++) {
+                const ry = zy + zh * .07 + (r / 6) * zh * .87;
+                ctx.fillStyle = r % 2 ? '#3E2723' : '#5D4037';
+                ctx.fillRect(zx, ry, zw, zh / 7.2);
+            }
+            const vc = ['#E53935', '#FF7043', '#8BC34A', '#F57F17', '#7B1FA2', '#00897B'];
+            const cols = Math.floor(zw / 24) + 1;
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const vx = zx + (c / cols) * zw + zw / (cols * 2), vy = zy + zh * .13 + (r / 5) * zh * .74;
+                    const co = vc[(r * cols + c) % vc.length];
+                    ctx.fillStyle = '#388E3C';
+                    ctx.beginPath(); ctx.ellipse(vx - 4, vy - 1.5, 4, 2.2, -0.4, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.ellipse(vx + 3.5, vy - 2.5, 3.5, 2, .4, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = co;
+                    ctx.beginPath(); ctx.arc(vx + .5, vy + 1, 3.8, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            zoneLabel(zx, zy, zw, zh, 'Veggies');
+        }
+
+        function drawSunflowerZone(zx, zy, zw, zh) {
+            ctx.fillStyle = '#6D4C41'; ctx.fillRect(zx, zy, zw, zh);
+            const n = Math.max(5, Math.floor(zw / 38));
+            for (let i = 0; i < n; i++) {
+                const fx = zx + (i / n) * zw + zw / (n * 2);
+                const fh = zh * (.46 + RND[i + 50] * .2);
+                const sw = Math.sin(t * .65 + i * .82) * 6;
+                ctx.strokeStyle = '#558B2F'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(fx, zy + zh);
+                ctx.quadraticCurveTo(fx + sw * .4, zy + zh - fh * .5, fx + sw, zy + zh - fh); ctx.stroke();
+                // leaves
+                ctx.fillStyle = '#689F38';
+                ctx.beginPath(); ctx.ellipse(fx + sw * .38 - 9, zy + zh - fh * .44, 10, 4.5, -.55, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(fx + sw * .6 + 9, zy + zh - fh * .62, 10, 4.5, .55, 0, Math.PI * 2); ctx.fill();
+                // flower
+                const hx = fx + sw, hy = zy + zh - fh, fr = zh * .057;
+                ctx.fillStyle = '#FFC107';
+                for (let p = 0; p < 13; p++) {
+                    const pa = (p / 13) * Math.PI * 2 + t * .06;
+                    ctx.beginPath();
+                    ctx.ellipse(hx + Math.cos(pa) * fr * 1.55, hy + Math.sin(pa) * fr * 1.55, fr * .48, fr * .23, pa, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                const cg = ctx.createRadialGradient(hx, hy, 0, hx, hy, fr);
+                cg.addColorStop(0, '#5D4037'); cg.addColorStop(1, '#3E2723');
+                ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(hx, hy, fr, 0, Math.PI * 2); ctx.fill();
+            }
+            zoneLabel(zx, zy, zw, zh, 'Sunflowers');
+        }
+
+        function drawWheatZone(zx, zy, zw, zh) {
+            ctx.fillStyle = '#8D6E63'; ctx.fillRect(zx, zy, zw, zh);
+            const n = Math.max(10, Math.floor(zw / 22));
+            for (let i = 0; i < n; i++) {
+                const wx = zx + (i / n) * zw + zw / (n * 2) + (RND[i + 80] - .5) * 3.5;
+                const wh = zh * (.47 + RND[i + 90] * .28);
+                const sw = Math.sin(t * .95 + i * .52) * 9;
+                ctx.strokeStyle = '#C8A84B'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(wx, zy + zh);
+                ctx.quadraticCurveTo(wx + sw * .4, zy + zh - wh * .5, wx + sw, zy + zh - wh); ctx.stroke();
+                const hx = wx + sw, hy = zy + zh - wh;
+                for (let k = 0; k < 5; k++) {
+                    const ka = (k - 2) * .25;
+                    ctx.strokeStyle = '#D4A843'; ctx.lineWidth = 1.4;
+                    ctx.beginPath(); ctx.moveTo(hx, hy - k * 5); ctx.lineTo(hx + Math.sin(ka) * 7, hy - k * 5 - 5.5); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(hx, hy - k * 5); ctx.lineTo(hx - Math.sin(ka) * 7, hy - k * 5 - 5.5); ctx.stroke();
+                }
+            }
+            zoneLabel(zx, zy, zw, zh, 'Wheat');
+        }
+
+        function drawFruitZone(zx, zy, zw, zh) {
+            ctx.fillStyle = '#388E3C'; ctx.fillRect(zx, zy, zw, zh);
+            const fc = ['#F57F17', '#E53935', '#FF8F00', '#C62828', '#4CAF50'];
+            const nt = Math.max(3, Math.floor(zw / 60));
+            for (let i = 0; i < nt; i++) {
+                const tx = zx + (i / nt) * zw + zw / (nt * 2);
+                const th = zh * .7, sw = Math.sin(t * .48 + i * 1.2) * 3.5;
+                ctx.fillStyle = '#5D4037';
+                ctx.fillRect(tx - 5.5, zy + zh - th * .36, 11, th * .36);
+                [[.57, .155, '#1B5E20'], [.65, .135, '#2E7D32'], [.74, .115, '#388E3C']].forEach(([yf, cr, col]) => {
+                    ctx.fillStyle = col; ctx.beginPath();
+                    ctx.arc(tx + sw, zy + zh - th * yf, zh * cr, 0, Math.PI * 2); ctx.fill();
+                });
+                for (let f = 0; f < 6; f++) {
+                    const fa = (f / 6) * Math.PI * 2 + t * .05;
+                    const fr = zh * .092;
+                    ctx.fillStyle = fc[f % fc.length];
+                    ctx.beginPath();
+                    ctx.arc(tx + sw + Math.cos(fa) * fr, zy + zh - th * .65 + Math.sin(fa) * fr * .55, zh * .027, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            zoneLabel(zx, zy, zw, zh, 'Fruits');
+        }
+
+        function zoneLabel(zx, zy, zw, zh, text) {
+            const fs = Math.max(9, zw * .088);
+            ctx.fillStyle = 'rgba(255,255,255,.82)';
+            ctx.font = `600 ${fs}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(text, zx + zw / 2, zy + zh - 10);
+        }
+
+        /* ── Farmer drawing ── */
+        const SKIN = '#8B5E3C';
+
+        function drawTool(sx, sy, s, tool) {
+            ctx.save(); ctx.translate(sx, sy);
+            if (tool === 'hoe') {
+                ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2.5 * s; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(8 * s, 18 * s); ctx.stroke();
+                rrect(-3 * s, -8 * s, 13 * s, 6 * s, 1.5 * s);
+                ctx.fillStyle = '#607D8B'; ctx.fill();
+            } else if (tool === 'sickle') {
+                ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2.5 * s; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(4 * s, 15 * s); ctx.stroke();
+                ctx.strokeStyle = '#78909C'; ctx.lineWidth = 2.5 * s;
+                ctx.beginPath(); ctx.arc(5 * s, -6 * s, 9 * s, .25, Math.PI * 1.5); ctx.stroke();
+            } else if (tool === 'basket') {
+                const bg = ctx.createLinearGradient(-9 * s, -9 * s, 9 * s, 3 * s);
+                bg.addColorStop(0, '#A1887F'); bg.addColorStop(1, '#6D4C41');
+                ctx.fillStyle = bg;
+                ctx.beginPath(); ctx.ellipse(0, -4 * s, 9 * s, 6.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 1.3 * s;
+                ctx.beginPath(); ctx.arc(0, -4 * s, 9 * s, Math.PI, 0); ctx.stroke();
+                ctx.strokeStyle = 'rgba(0,0,0,.1)'; ctx.lineWidth = .8 * s;
+                [-4.5, 0, 4.5].forEach(dx => {
+                    ctx.beginPath(); ctx.moveTo(dx * s, -10 * s); ctx.lineTo(dx * s, -0 * s); ctx.stroke();
+                });
+            } else if (tool === 'sheaf') {
+                ctx.fillStyle = '#C8A84B';
+                ctx.beginPath(); rrect(-5.5 * s, -15 * s, 11 * s, 16 * s, 1 * s); ctx.fill();
+                ctx.fillStyle = '#6D4C41'; ctx.fillRect(-7 * s, -11 * s, 14 * s, 3 * s);
+                ctx.strokeStyle = '#D4A843'; ctx.lineWidth = 1.3 * s;
+                [-4, -1.5, 1.5, 4].forEach(dx => {
+                    ctx.beginPath(); ctx.moveTo(dx * s, -15 * s); ctx.lineTo(dx * s + .8, -23 * s); ctx.stroke();
+                });
+            } else if (tool === 'pluck') {
+                ctx.fillStyle = SKIN;
+                ctx.beginPath(); ctx.arc(0, -12 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function drawMaleFarmer(f, s) {
+            const cx = f.x, cy = f.y;
+            const lean = f.state === 'work' ? .28 : 0;
+            const armSw = f.state === 'work' ? Math.sin(f.phase + t * 2.1) * 9 : 2;
+
+            ctx.save();
+            // shadow
+            ctx.save(); ctx.translate(cx, cy); ctx.scale(1, .3);
+            ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath();
+            ctx.ellipse(0, 0, 15 * s, 7 * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+
+            ctx.translate(cx, cy); ctx.rotate(lean);
+
+            // dhoti
+            ctx.fillStyle = '#F0EDE0';
+            ctx.beginPath(); ctx.moveTo(-13 * s, 0); ctx.lineTo(13 * s, 0);
+            ctx.lineTo(10 * s, -29 * s); ctx.lineTo(-10 * s, -29 * s); ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,.06)'; ctx.lineWidth = .7; ctx.stroke();
+            ctx.strokeStyle = 'rgba(0,0,0,.06)'; ctx.lineWidth = .5;
+            ctx.beginPath(); ctx.moveTo(0, -29 * s); ctx.lineTo(0, 0); ctx.stroke();
+
+            // kurta
+            ctx.fillStyle = f.kurta;
+            rrect(-9.5 * s, -60 * s, 19 * s, 33 * s, 3 * s); ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 1.5 * s;
+            ctx.beginPath(); ctx.moveTo(0, -60 * s); ctx.lineTo(0, -50 * s); ctx.stroke();
+
+            // arms
+            ctx.strokeStyle = SKIN; ctx.lineWidth = 4.8 * s; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(-9.5 * s, -53 * s); ctx.lineTo(-22 * s, -40 * s - armSw * .5); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(9.5 * s, -53 * s); ctx.lineTo(21 * s, -34 * s + armSw); ctx.stroke();
+            drawTool(21 * s, -34 * s + armSw, s, f.tool);
+
+            // neck
+            ctx.fillStyle = SKIN; ctx.fillRect(-3.5 * s, -67 * s, 7 * s, 9 * s);
+
+            // head
+            ctx.fillStyle = SKIN; ctx.beginPath(); ctx.arc(0, -76 * s, 10.5 * s, 0, Math.PI * 2); ctx.fill();
+
+            // face
+            if (f.state === 'look') {
+                ctx.fillStyle = '#2C1810';
+                ctx.beginPath(); ctx.arc(-3.8 * s, -77.5 * s, 1.8 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(3.8 * s, -77.5 * s, 1.8 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#2C1810'; ctx.lineWidth = 1.7 * s;
+                ctx.beginPath(); ctx.arc(0, -74 * s, 4.2 * s, .22, Math.PI - .22); ctx.stroke();
+                ctx.strokeStyle = '#1A0A00'; ctx.lineWidth = 1.5 * s;
+                ctx.beginPath(); ctx.moveTo(-4.5 * s, -76.5 * s); ctx.quadraticCurveTo(0, -78.5 * s, 4.5 * s, -76.5 * s); ctx.stroke();
+            } else {
+                ctx.fillStyle = '#5D3B1A';
+                ctx.beginPath(); ctx.arc(-3.5 * s, -77 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(3.5 * s, -77 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#5D3B1A'; ctx.lineWidth = 1.3 * s;
+                ctx.beginPath(); ctx.moveTo(-3 * s, -73.5 * s); ctx.quadraticCurveTo(0, -75 * s, 3 * s, -73.5 * s); ctx.stroke();
+            }
+
+            // turban
+            ctx.fillStyle = f.turban;
+            ctx.beginPath(); ctx.ellipse(0, -83 * s, 13.5 * s, 8.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+            [1, 2, 3, 4].forEach(i => {
+                ctx.strokeStyle = 'rgba(0,0,0,.1)'; ctx.lineWidth = .8 * s;
+                ctx.beginPath(); ctx.arc(0, -81 * s, (10.5 + i * 1.4) * s, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+            });
+            ctx.fillStyle = darkenHex(f.turban, 25);
+            ctx.beginPath(); ctx.arc(12.5 * s, -81 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = lightenHex(f.turban, 40);
+            ctx.beginPath(); ctx.arc(12.5 * s, -81 * s, 1.8 * s, 0, Math.PI * 2); ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawFemaleFarmer(f, s) {
+            const cx = f.x, cy = f.y;
+            const lean = f.state === 'work' ? .2 : 0;
+            const armSw = f.state === 'work' ? Math.sin(f.phase + t * 1.9) * 7 : 2;
+
+            ctx.save();
+            ctx.save(); ctx.translate(cx, cy); ctx.scale(1, .3);
+            ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.beginPath();
+            ctx.ellipse(0, 0, 13 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+
+            ctx.translate(cx, cy); ctx.rotate(lean);
+
+            // saree bottom
+            ctx.fillStyle = f.saree;
+            ctx.beginPath(); ctx.moveTo(-13.5 * s, 0); ctx.lineTo(13.5 * s, 0);
+            ctx.lineTo(11.5 * s, -36 * s); ctx.lineTo(-11.5 * s, -36 * s); ctx.closePath(); ctx.fill();
+            // gold border
+            ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.8 * s;
+            ctx.beginPath(); ctx.moveTo(-13.5 * s, -3.5 * s); ctx.lineTo(13.5 * s, -3.5 * s); ctx.stroke();
+            ctx.fillStyle = '#FFD700';
+            for (let d = 0; d < 5; d++) { ctx.beginPath(); ctx.arc((-10 + d * 5) * s, -3.5 * s, 1.1 * s, 0, Math.PI * 2); ctx.fill(); }
+
+            // blouse
+            ctx.fillStyle = lightenHex(f.saree, 50);
+            rrect(-8.5 * s, -58 * s, 17 * s, 24 * s, 2.5 * s); ctx.fill();
+
+            // pallu
+            ctx.fillStyle = f.saree; ctx.globalAlpha = .72;
+            ctx.beginPath(); ctx.moveTo(-8.5 * s, -57 * s); ctx.lineTo(-21 * s, -43 * s);
+            ctx.lineTo(-16 * s, -36 * s); ctx.lineTo(-5 * s, -53 * s); ctx.closePath(); ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // arms
+            ctx.strokeStyle = SKIN; ctx.lineWidth = 4.2 * s; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(-8.5 * s, -52 * s); ctx.lineTo(-20 * s, -40 * s - armSw * .5); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(8.5 * s, -52 * s); ctx.lineTo(19 * s, -36 * s + armSw); ctx.stroke();
+            // bangles
+            ['#FFD700', '#E53935', '#4CAF50'].forEach((bc, bi) => {
+                ctx.strokeStyle = bc; ctx.lineWidth = (bi === 0 ? 2 : 1.4) * s;
+                ctx.beginPath(); ctx.arc(-19.5 * s, -41 * s - armSw * .5, (2.5 + bi * .8) * s, 0, Math.PI * 2); ctx.stroke();
+            });
+            drawTool(19 * s, -36 * s + armSw, s, f.tool);
+
+            // neck
+            ctx.fillStyle = SKIN; ctx.fillRect(-3 * s, -65 * s, 6 * s, 9 * s);
+
+            // head
+            ctx.fillStyle = SKIN; ctx.beginPath(); ctx.arc(0, -74 * s, 9.5 * s, 0, Math.PI * 2); ctx.fill();
+
+            // face
+            if (f.state === 'look') {
+                ctx.fillStyle = '#2C1810';
+                ctx.beginPath(); ctx.arc(-3.2 * s, -75.5 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(3.2 * s, -75.5 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#2C1810'; ctx.lineWidth = 1.4 * s;
+                ctx.beginPath(); ctx.arc(0, -72 * s, 3.8 * s, .2, Math.PI - .2); ctx.stroke();
+            } else {
+                ctx.fillStyle = '#5D3B1A';
+                ctx.beginPath(); ctx.arc(-3 * s, -75 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(3 * s, -75 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#5D3B1A'; ctx.lineWidth = 1.2 * s;
+                ctx.beginPath(); ctx.moveTo(-2.5 * s, -72 * s); ctx.quadraticCurveTo(0, -73.5 * s, 2.5 * s, -72 * s); ctx.stroke();
+            }
+
+            // hair
+            ctx.fillStyle = '#1A0A00';
+            ctx.beginPath(); ctx.arc(0, -81 * s, 9.8 * s, Math.PI, 0); ctx.fill();
+            ctx.beginPath(); ctx.arc(8.5 * s, -79 * s, 4.5 * s, 0, Math.PI * 2); ctx.fill();
+
+            // head covering (saree pallu)
+            ctx.fillStyle = f.saree; ctx.globalAlpha = .52;
+            ctx.beginPath(); ctx.arc(0, -78 * s, 11.5 * s, Math.PI, 0); ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // bindi
+            ctx.fillStyle = '#C62828'; ctx.beginPath(); ctx.arc(0, -75.5 * s, 1.4 * s, 0, Math.PI * 2); ctx.fill();
+            // nose ring
+            ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.1 * s;
+            ctx.beginPath(); ctx.arc(2.8 * s, -73.5 * s, 1.6 * s, 0, Math.PI * 2); ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawBubble(f, s) {
+            const cx = f.x, topY = f.y - H * .23;
+            const alpha = Math.min(1, f.bubTimer / 20);
+            if (alpha <= 0) return;
+            const lines = f.quote.split('\n');
+            const fs = Math.max(10, H * .019);
+            ctx.font = `bold ${fs}px sans-serif`;
+            const mw = Math.max(...lines.map(l => ctx.measureText(l).width));
+            const bw = mw + 28, bh = lines.length * 20 + 18;
+            const bx = Math.max(6, Math.min(W - bw - 6, cx - bw / 2));
+            const by = topY - bh;
+
+            ctx.save(); ctx.globalAlpha = alpha;
+            // shadow
+            ctx.shadowColor = 'rgba(0,0,0,.18)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+            ctx.fillStyle = '#FFFDE7';
+            rrect(bx, by, bw, bh, 10); ctx.fill();
+            ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+            ctx.strokeStyle = '#2d5016'; ctx.lineWidth = 2.2;
+            rrect(bx, by, bw, bh, 10); ctx.stroke();
+            // tail
+            const tx = Math.max(bx + 14, Math.min(bx + bw - 14, cx));
+            ctx.fillStyle = '#FFFDE7';
+            ctx.beginPath(); ctx.moveTo(tx - 9, by + bh); ctx.lineTo(tx, by + bh + 13); ctx.lineTo(tx + 9, by + bh); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#2d5016'; ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.moveTo(tx - 9, by + bh); ctx.lineTo(tx, by + bh + 13); ctx.lineTo(tx + 9, by + bh); ctx.stroke();
+            ctx.fillStyle = '#FFFDE7'; ctx.fillRect(bx + 2, by + bh - 3, bw - 4, 6);
+            // text
+            ctx.fillStyle = '#1B5E20'; ctx.textAlign = 'center';
+            lines.forEach((ln, i) => ctx.fillText(ln, cx, by + 16 + i * 20));
+            ctx.restore();
+        }
+
+        /* ── Main draw ── */
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            const GY = H * GYF;
+            const ZW = W / 5;
+
+            drawSky();
+            drawSun();
+
+            clouds.forEach(c => { drawCloud(c); c.x += c.spd; if (c.x > W + 160) c.x = -160; });
+            birds.forEach(b => { drawBird(b); b.x += b.spd; if (b.x > W + 35) b.x = -35; });
+
+            drawHills();
+            drawGround();
+
+            // Crop zones (bottom to top render order)
+            drawPaddyZone(ZW * 0, GY, ZW, H - GY);
+            drawVeggieZone(ZW * 1, GY, ZW, H - GY);
+            drawSunflowerZone(ZW * 2, GY, ZW, H - GY);
+            drawWheatZone(ZW * 3, GY, ZW, H - GY);
+            drawFruitZone(ZW * 4, GY, ZW, H - GY);
+
+            // Farmers
+            const s = Math.max(.42, Math.min(1.18, H / 700));
+            farmers.forEach(f => {
+                f.x = f.xf * W; f.y = f.yf * H;
+                // timer logic
+                f.timer--;
+                if (f.timer <= 0 && f.state === 'work') {
+                    f.state = 'look';
+                    f.quote = FARMER_QUOTES[Math.floor(Math.random() * FARMER_QUOTES.length)];
+                    f.bubTimer = 230;
+                    f.timer = 380 + Math.floor(Math.random() * 280);
+                }
+                if (f.state === 'look') { f.bubTimer--; if (f.bubTimer <= 0) f.state = 'work'; }
+                if (f.sex === 'm') drawMaleFarmer(f, s);
+                else drawFemaleFarmer(f, s);
+                if (f.state === 'look') drawBubble(f, s);
+            });
+
+            t += 0.016;
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', initScene);
+        initScene();
+        draw();
+
+
+        /* ══════════════════════════════════════════════════════
+           BANNER CAROUSEL
+           ══════════════════════════════════════════════════════ */
+        let curSlide = 0;
+        const slides = document.querySelectorAll('.lp-slide');
+        const dots = document.querySelectorAll('.lp-dot');
+
+        function goSlide(n) {
+            slides[curSlide].classList.remove('lp-slide-active');
+            dots[curSlide].classList.remove('lp-dot-active');
+            curSlide = (n + slides.length) % slides.length;
+            slides[curSlide].classList.add('lp-slide-active');
+            dots[curSlide].classList.add('lp-dot-active');
+        }
+
+        let autoSlide = setInterval(() => goSlide(curSlide + 1), 3800);
+
+        document.getElementById('lp-next').addEventListener('click', () => { clearInterval(autoSlide); goSlide(curSlide + 1); autoSlide = setInterval(() => goSlide(curSlide + 1), 3800); });
+        document.getElementById('lp-prev').addEventListener('click', () => { clearInterval(autoSlide); goSlide(curSlide - 1); autoSlide = setInterval(() => goSlide(curSlide + 1), 3800); });
+        dots.forEach(d => d.addEventListener('click', () => { clearInterval(autoSlide); goSlide(+d.dataset.slide); autoSlide = setInterval(() => goSlide(curSlide + 1), 3800); }));
+
+
+        /* ══════════════════════════════════════════════════════
+           STATS COUNT-UP  
+           ══════════════════════════════════════════════════════ */
+        function countUp(el) {
+            const target = +el.dataset.target;
+            const suffix = el.dataset.suffix || '';
+            const text = el.dataset.text || '';
+            if (text) { el.textContent = text; return; }
+            if (target === 0) { el.textContent = '0'; return; }
+            let current = 0;
+            const step = Math.ceil(target / 55);
+            const timer = setInterval(() => {
+                current = Math.min(current + step, target);
+                el.textContent = current + suffix;
+                if (current >= target) clearInterval(timer);
+            }, 28);
+        }
+
+        const statsObs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    document.querySelectorAll('.lp-stat-num').forEach(countUp);
+                    statsObs.disconnect();
+                }
+            });
+        }, { threshold: .4 });
+        const statsEl = document.getElementById('lp-stats');
+        if (statsEl) statsObs.observe(statsEl);
+
+    })();
+</script>
+
+{% endblock %}
