@@ -6,6 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Amma's Farm{% endblock %} 🌾</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  
+  <!-- ===== PWA / Mobile app headers ===== -->
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+  <meta name="theme-color" content="#2d5016" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Amma's Farm" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}" />
 </head>
 
 <body>
@@ -574,7 +582,7 @@
   </style>
 
   <script>
-    const FARM_QUOTES_PREMIUM = [
+    const FARM_QUOTES = [
       "Curated harvest. Honest soil.",
       "Grown with intent.",
       "Where purity begins.",
@@ -739,6 +747,20 @@
   </script>
   <!-- ===== END LOADING SCREEN ===== -->
 
+  <!-- ===== SERVICE WORKER REGISTRATION ===== -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}")
+          .then(function(reg) {
+            console.log('🌾 [PWA] Service Worker registered successfully, scope:', reg.scope);
+          })
+          .catch(function(err) {
+            console.error('🌾 [PWA] Service Worker registration failed:', err);
+          });
+      });
+    }
+  </script>
 
 </body>
 

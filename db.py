@@ -7,6 +7,9 @@ import psycopg2.pool
 import psycopg2.extras
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from dotenv import load_dotenv
+load_dotenv()
+
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 # Allowed columns for updates (whitelists to prevent SQL injection via column names)

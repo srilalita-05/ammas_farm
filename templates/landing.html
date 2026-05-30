@@ -71,69 +71,90 @@
             </div>
         </div>
     </div>
-    <a href="#lp-carousel-sec" id="lp-scroll-down">
+    <a href="#lp-products-sec" id="lp-scroll-down">
         <span>Discover more</span>
         <div id="lp-chevron">↓</div>
     </a>
 </section>
 
-<!-- ─── BANNER CAROUSEL ───────────────────────────────────────────── -->
-<section id="lp-carousel-sec">
-    <div id="lp-carousel">
-        <div class="lp-slide lp-slide-0 lp-slide-active">
-            <div class="lp-slide-inner">
-                <div class="lp-slide-icon">🍅</div>
-                <div>
-                    <h2 class="lp-slide-title">Fresh Tomatoes</h2>
-                    <p class="lp-slide-sub">Sun-ripened on the vine, harvested every morning</p>
+<!-- ─── FEATURED PRODUCTS SHOWCASE ─────────────────────────────────── -->
+<section class="lp-section" id="lp-products-sec">
+    <div class="lp-sec-head">
+        <h2>Freshly Harvested Today</h2>
+        <p>Mindfully grown, chemical-free produce gathered this morning. Taste the premium difference.</p>
+    </div>
+    <div id="lp-products-grid">
+        {% for p in products %}
+        <div class="lp-prod-card">
+            <div class="lp-prod-inner">
+                <!-- Floating Category Pill -->
+                {% if p['category_name'] %}
+                <span class="lp-prod-cat-pill">{{ p['category_icon'] or '🌿' }} {{ p['category_name'] }}</span>
+                {% endif %}
+                
+                <!-- Floating Badges -->
+                <div class="lp-prod-badges">
+                    <span class="lp-badge-premium">🌱 Organic</span>
+                    {% if p['category_name'] == 'Dairy' %}
+                    <span class="lp-badge-a2">🥛 A2</span>
+                    {% endif %}
+                </div>
+
+                <!-- Product Image / SVG Fallback Frame -->
+                <a href="{{ url_for('product_detail', product_id=p['id']) }}" class="lp-prod-img-frame">
+                    {% if p['image'] %}
+                        {% if p['image'].startswith('http') %}
+                        <img src="{{ p['image'] }}" alt="{{ p['name'] }}" class="lp-prod-img" loading="lazy" />
+                        {% else %}
+                        <img src="{{ url_for('static', filename='uploads/' + p['image']) }}" alt="{{ p['name'] }}" class="lp-prod-img" loading="lazy" />
+                        {% endif %}
+                    {% else %}
+                    <!-- Beautiful CSS Gradient Backdrop with Emoji -->
+                    <div class="lp-prod-fallback" style="--fallback-bg: {% if p['category_name'] == 'Vegetables' %}linear-gradient(135deg, #2e7d32, #81c784){% elif p['category_name'] == 'Fruits' %}linear-gradient(135deg, #e65100, #ffb74d){% elif p['category_name'] == 'Dairy' %}linear-gradient(135deg, #0d47a1, #64b5f6){% elif p['category_name'] == 'Eggs' %}linear-gradient(135deg, #6a1b9a, #ba68c8){% else %}linear-gradient(135deg, #2d5016, #a5d96a){% endif %};">
+                        <span class="lp-prod-fallback-emoji">{{ p['category_icon'] or '🌿' }}</span>
+                        <div class="lp-prod-fallback-decor">🌾</div>
+                    </div>
+                    {% endif %}
+                </a>
+
+                <!-- Product Text Info -->
+                <div class="lp-prod-info">
+                    <h3 class="lp-prod-title">
+                        <a href="{{ url_for('product_detail', product_id=p['id']) }}">{{ p['name'] }}</a>
+                    </h3>
+                    <p class="lp-prod-desc">{{ p['description'][:85] }}{% if p['description']|length > 85 %}...{% endif %}</p>
+                    
+                    <div class="lp-prod-footer">
+                        <div class="lp-prod-price-row">
+                            <span class="lp-prod-price">₹{{ "%.2f"|format(p['price']) }}</span>
+                            <span class="lp-prod-unit">/ {{ p['unit'] }}</span>
+                        </div>
+
+                        <!-- Add to Cart / View Details Button -->
+                        <div class="lp-prod-action">
+                            {% if current_user and current_user['role'] != 'admin' %}
+                            <form method="POST" action="{{ url_for('add_to_cart') }}" class="lp-prod-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="product_id" value="{{ p['id'] }}" />
+                                <input type="hidden" name="quantity" value="1" />
+                                <input type="hidden" name="next" value="{{ url_for('landing') }}" />
+                                <button type="submit" class="lp-prod-add-btn" aria-label="Add {{ p['name'] }} to Cart">
+                                    <span>Add</span>
+                                    <span class="btn-icon">🛒</span>
+                                </button>
+                            </form>
+                            {% else %}
+                            <a href="{{ url_for('product_detail', product_id=p['id']) }}" class="lp-prod-view-btn">
+                                <span>View</span>
+                                <span class="btn-icon">→</span>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="lp-slide lp-slide-1">
-            <div class="lp-slide-inner">
-                <div class="lp-slide-icon">🚜</div>
-                <div>
-                    <h2 class="lp-slide-title">Farm Direct</h2>
-                    <p class="lp-slide-sub">Zero middlemen — straight from our soil to your door</p>
-                </div>
-            </div>
-        </div>
-        <div class="lp-slide lp-slide-2">
-            <div class="lp-slide-inner">
-                <div class="lp-slide-icon">📦</div>
-                <div>
-                    <h2 class="lp-slide-title">Order Today</h2>
-                    <p class="lp-slide-sub">Place your order and receive same-day delivery</p>
-                </div>
-            </div>
-        </div>
-        <div class="lp-slide lp-slide-3">
-            <div class="lp-slide-inner">
-                <div class="lp-slide-icon">🌱</div>
-                <div>
-                    <h2 class="lp-slide-title">100% Organic</h2>
-                    <p class="lp-slide-sub">No pesticides, no chemicals — just nature's best</p>
-                </div>
-            </div>
-        </div>
-        <div class="lp-slide lp-slide-4">
-            <div class="lp-slide-inner">
-                <div class="lp-slide-icon">🥛</div>
-                <div>
-                    <h2 class="lp-slide-title">Dairy Fresh</h2>
-                    <p class="lp-slide-sub">A2 cow milk, morning ghee — collected before sunrise</p>
-                </div>
-            </div>
-        </div>
-        <div id="lp-carousel-dots">
-            <button class="lp-dot lp-dot-active" data-slide="0"></button>
-            <button class="lp-dot" data-slide="1"></button>
-            <button class="lp-dot" data-slide="2"></button>
-            <button class="lp-dot" data-slide="3"></button>
-            <button class="lp-dot" data-slide="4"></button>
-        </div>
-        <button id="lp-prev" class="lp-carousel-btn">‹</button>
-        <button id="lp-next" class="lp-carousel-btn">›</button>
+        {% endfor %}
     </div>
 </section>
 
@@ -261,42 +282,6 @@
     </div>
 </section>
 
-<!-- ─── TESTIMONIALS TICKER ───────────────────────────────────────── -->
-<section class="lp-section" id="lp-test-sec">
-    <div class="lp-sec-head">
-        <h2>What Our Customers Say</h2>
-        <p>Real people, real produce, real stories</p>
-    </div>
-    <div id="lp-tick-wrap">
-        <div id="lp-ticker">
-            <div class="lp-tick-item">"Absolutely fresh! Got tomatoes still warm from the sun. — <strong>Priya R.,
-                    Hyderabad</strong>"</div>
-            <div class="lp-tick-item">"Best ghee I've ever tasted. Amma's Farm is our weekly staple. — <strong>Suresh
-                    M., Kukatpally</strong>"</div>
-            <div class="lp-tick-item">"Real farm eggs taste completely different. My kids love them! — <strong>Anitha
-                    K., KPHB</strong>"</div>
-            <div class="lp-tick-item">"Curry leaves this fresh are impossible to find in stores! — <strong>Kavitha L.,
-                    Miyapur</strong>"</div>
-            <div class="lp-tick-item">"Quick delivery, beautiful packaging. Feels like getting a gift! — <strong>Ramesh
-                    T., Hitech City</strong>"</div>
-            <div class="lp-tick-item">"The A2 milk tastes just like my grandmother used to serve us. — <strong>Deepa S.,
-                    Madhapur</strong>"</div>
-            <div class="lp-tick-item">"Alphonso mangoes from here are genuinely the best I've had. — <strong>Vijay P.,
-                    Kondapur</strong>"</div>
-            <!-- duplicate for seamless loop -->
-            <div class="lp-tick-item">"Absolutely fresh! Got tomatoes still warm from the sun. — <strong>Priya R.,
-                    Hyderabad</strong>"</div>
-            <div class="lp-tick-item">"Best ghee I've ever tasted. Amma's Farm is our weekly staple. — <strong>Suresh
-                    M., Kukatpally</strong>"</div>
-            <div class="lp-tick-item">"Real farm eggs taste completely different. My kids love them! — <strong>Anitha
-                    K., KPHB</strong>"</div>
-            <div class="lp-tick-item">"Curry leaves this fresh are impossible to find in stores! — <strong>Kavitha L.,
-                    Miyapur</strong>"</div>
-            <div class="lp-tick-item">"Quick delivery, beautiful packaging. Feels like getting a gift! — <strong>Ramesh
-                    T., Hitech City</strong>"</div>
-        </div>
-    </div>
-</section>
 
 <!-- ─── FINAL CTA ─────────────────────────────────────────────────── -->
 <section id="lp-cta-sec">
@@ -585,128 +570,263 @@
         font-size: 1.2rem;
     }
 
-    /* ── BANNER CAROUSEL ────────────────────────────────────────────────── */
-    #lp-carousel-sec {
-        background: #fff;
+    /* ── FEATURED PRODUCTS SHOWCASE ──────────────────────────────────────── */
+    #lp-products-sec {
+        background: #fdfaf2;
+        border-top: 1px solid rgba(212, 201, 168, 0.4);
+        border-bottom: 1px solid rgba(212, 201, 168, 0.4);
+        padding: 5rem 1.5rem;
+        overflow: hidden;
     }
 
-    #lp-carousel {
+    #lp-products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2.2rem;
+        max-width: 1180px;
+        margin: 0 auto;
+    }
+
+    .lp-prod-card {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(45, 80, 22, 0.08);
+        border-radius: 24px;
+        padding: 1.25rem;
+        box-shadow: 0 10px 30px -10px rgba(45, 80, 22, 0.08);
+        transition: border-color 0.4s, box-shadow 0.4s;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    .lp-prod-card.lp-animate-in {
+        animation: lp-frame-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes lp-frame-entrance {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .lp-prod-card:hover {
+        border-color: rgba(74, 124, 31, 0.45);
+        box-shadow: 0 20px 40px -12px rgba(45, 80, 22, 0.18),
+                    0 0 20px 1px rgba(165, 217, 106, 0.15);
+    }
+
+    .lp-prod-inner {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        transform: translateZ(30px);
+    }
+
+    .lp-prod-cat-pill {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(45, 80, 22, 0.1);
+        color: var(--green-dark, #2d5016);
+        padding: 0.35rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        backdrop-filter: blur(4px);
+    }
+
+    .lp-prod-badges {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        align-items: flex-end;
+    }
+
+    .lp-badge-premium {
+        background: linear-gradient(135deg, #2d5016, #4a7c1f);
+        color: #fff;
+        padding: 0.25rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(45, 80, 22, 0.25);
+    }
+
+    .lp-badge-a2 {
+        background: linear-gradient(135deg, #0d47a1, #1976d2);
+        color: #fff;
+        padding: 0.25rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(13, 71, 161, 0.25);
+    }
+
+    .lp-prod-img-frame {
+        position: relative;
+        width: 100%;
+        height: 180px;
+        border-radius: 18px;
+        overflow: hidden;
+        margin-bottom: 1.1rem;
+        display: block;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        background: #f7f5ef;
+    }
+
+    .lp-prod-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        transform-origin: center center;
+    }
+
+    .lp-prod-card:hover .lp-prod-img {
+        transform: scale(1.08) rotate(1deg);
+    }
+
+    .lp-prod-fallback {
+        width: 100%;
+        height: 100%;
+        background: var(--fallback-bg, linear-gradient(135deg, #2d5016, #a5d96a));
+        display: flex;
+        align-items: center;
+        justify-content: center;
         position: relative;
         overflow: hidden;
-        height: 140px;
     }
 
-    .lp-slide {
+    .lp-prod-fallback-emoji {
+        font-size: 4rem;
+        z-index: 2;
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .lp-prod-card:hover .lp-prod-fallback-emoji {
+        transform: scale(1.15) rotate(-5deg);
+    }
+
+    .lp-prod-fallback-decor {
         position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity .6s ease;
-    }
-
-    .lp-slide-active {
-        opacity: 1;
-    }
-
-    .lp-slide-0 {
-        background: linear-gradient(135deg, #b71c1c, #e53935);
-    }
-
-    .lp-slide-1 {
-        background: linear-gradient(135deg, #1b5e20, #4caf50);
-    }
-
-    .lp-slide-2 {
-        background: linear-gradient(135deg, #e65100, #ff7043);
-    }
-
-    .lp-slide-3 {
-        background: linear-gradient(135deg, #33691e, #7cb342);
-    }
-
-    .lp-slide-4 {
-        background: linear-gradient(135deg, #0d47a1, #1976d2);
-    }
-
-    .lp-slide-inner {
-        display: flex;
-        align-items: center;
-        gap: 1.2rem;
+        bottom: -15px;
+        right: -10px;
+        font-size: 5rem;
+        opacity: 0.12;
+        transform: rotate(25deg);
+        user-select: none;
         color: #fff;
-        padding: 0 2rem;
     }
 
-    .lp-slide-icon {
-        font-size: 3rem;
-        flex-shrink: 0;
+    .lp-prod-info {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
     }
 
-    .lp-slide-title {
-        font-size: 1.6rem;
+    .lp-prod-title {
+        font-size: 1.22rem;
+        font-weight: 800;
+        color: var(--green-dark, #2d5016);
+        margin: 0 0 0.45rem;
+    }
+
+    .lp-prod-title a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .lp-prod-title a:hover {
+        color: #4a7c1f;
+    }
+
+    .lp-prod-desc {
+        font-size: 0.84rem;
+        color: var(--text-muted, #6b7280);
+        line-height: 1.55;
+        margin: 0 0 1.2rem;
+        flex-grow: 1;
+    }
+
+    .lp-prod-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px dashed rgba(212, 201, 168, 0.5);
+        padding-top: 0.95rem;
+        margin-top: auto;
+    }
+
+    .lp-prod-price-row {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lp-prod-price {
+        font-size: 1.35rem;
+        font-weight: 850;
+        color: #e65100;
+        line-height: 1;
+    }
+
+    .lp-prod-unit {
+        font-size: 0.72rem;
+        color: #a09070;
+        font-weight: 600;
+        margin-top: 0.15rem;
+    }
+
+    .lp-prod-add-btn, .lp-prod-view-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        border: none;
+        background: linear-gradient(135deg, #4a7c1f, #2d5016);
+        color: #fff !important;
+        padding: 0.55rem 1.15rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
         font-weight: 700;
-        margin: 0 0 .2rem;
-    }
-
-    .lp-slide-sub {
-        font-size: .92rem;
-        opacity: .9;
-        margin: 0;
-    }
-
-    #lp-carousel-dots {
-        position: absolute;
-        bottom: .7rem;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: .5rem;
-    }
-
-    .lp-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, .45);
-        border: none;
         cursor: pointer;
-        transition: background .2s, transform .2s;
+        box-shadow: 0 4px 14px rgba(45, 80, 22, 0.28);
+        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
+        text-decoration: none;
     }
 
-    .lp-dot-active {
-        background: #fff;
-        transform: scale(1.25);
+    .lp-prod-add-btn:hover, .lp-prod-view-btn:hover {
+        transform: scale(1.06) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(45, 80, 22, 0.4);
     }
 
-    .lp-carousel-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(255, 255, 255, .25);
-        border: none;
-        color: #fff;
-        font-size: 1.8rem;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: background .15s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .btn-icon {
+        font-size: 0.95rem;
+        transition: transform 0.25s;
     }
 
-    .lp-carousel-btn:hover {
-        background: rgba(255, 255, 255, .45);
+    .lp-prod-add-btn:hover .btn-icon {
+        transform: rotate(-12deg) scale(1.1);
     }
 
-    #lp-prev {
-        left: .75rem;
-    }
-
-    #lp-next {
-        right: .75rem;
+    .lp-prod-view-btn:hover .btn-icon {
+        transform: translateX(3px);
     }
 
     /* ── SECTIONS COMMON ────────────────────────────────────────────────── */
@@ -882,47 +1002,6 @@
         }
     }
 
-    /* ── TESTIMONIALS TICKER ────────────────────────────────────────────── */
-    #lp-test-sec {
-        overflow: hidden;
-    }
-
-    #lp-tick-wrap {
-        overflow: hidden;
-        border: 1px solid var(--border, #d4c9a8);
-        border-radius: 12px;
-        background: #fff;
-    }
-
-    #lp-ticker {
-        display: flex;
-        gap: 0;
-        animation: lp-tick 38s linear infinite;
-        width: max-content;
-    }
-
-    #lp-ticker:hover {
-        animation-play-state: paused;
-    }
-
-    @keyframes lp-tick {
-        0% {
-            transform: translateX(0);
-        }
-
-        100% {
-            transform: translateX(-50%);
-        }
-    }
-
-    .lp-tick-item {
-        white-space: nowrap;
-        padding: 1.1rem 2.4rem;
-        font-size: .9rem;
-        color: var(--text, #2c2c2c);
-        border-right: 1px solid var(--border, #d4c9a8);
-        min-width: 380px;
-    }
 
     /* ── FINAL CTA ──────────────────────────────────────────────────────── */
     #lp-cta-sec {
@@ -1008,17 +1087,7 @@
             font-size: 1.8rem;
         }
 
-        #lp-carousel {
-            height: 120px;
-        }
 
-        .lp-slide-icon {
-            font-size: 2rem;
-        }
-
-        .lp-slide-title {
-            font-size: 1.2rem;
-        }
 
         #lp-cats-grid {
             grid-template-columns: repeat(2, 1fr);
@@ -1081,6 +1150,7 @@
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         let W = 0, H = 0, t = 0;
+        const GYF = 0.58;
 
         // Static noise array for pseudo-random but stable values
         const RND = Array.from({ length: 600 }, () => Math.random());
@@ -1129,7 +1199,22 @@
                 sz: 3 + RND[i * 11 + 104] * 4,
             }));
 
-            farmers = FARMER_DEFS.map((d, i) => ({
+            let activeDefs = FARMER_DEFS.map(d => ({ ...d }));
+            if (W < 768) {
+                if (W < 480) {
+                    // Mobile: exactly 2 farmers (indices 1 and 3) spaced apart perfectly
+                    activeDefs = [activeDefs[1], activeDefs[3]];
+                    activeDefs[0].xf = 0.25;
+                    activeDefs[1].xf = 0.75;
+                } else {
+                    // Tablet: exactly 3 farmers spaced apart beautifully
+                    activeDefs = [activeDefs[0], activeDefs[2], activeDefs[4]];
+                    activeDefs[0].xf = 0.18;
+                    activeDefs[1].xf = 0.50;
+                    activeDefs[2].xf = 0.82;
+                }
+            }
+            farmers = activeDefs.map((d, i) => ({
                 ...d,
                 x: 0, y: 0,
                 state: 'work',
@@ -1156,13 +1241,157 @@
         }
         function lightenHex(hex, n) {
             const m = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if (!m) return hex;
-            return `rgb(${Math.min(255, parseInt(m[1], 16) + n)},${Math.min(255, parseInt(m[2], 16) + n)},${Math.min(255, parseInt(m[3], 16) + n)})`;
-        }
-        function darkenHex(hex, n) {
-            const m = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if (!m) return hex;
             return `rgb(${Math.max(0, parseInt(m[1], 16) - n)},${Math.max(0, parseInt(m[2], 16) - n)},${Math.max(0, parseInt(m[3], 16) - n)})`;
+        }
+
+        function hexToRgb(hex) {
+            const m = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!m) {
+                if (hex.startsWith('rgb')) {
+                    const parts = hex.match(/\d+/g);
+                    if (parts) return { r: +parts[0], g: +parts[1], b: +parts[2] };
+                }
+                return { r: 120, g: 120, b: 120 };
+            }
+            return {
+                r: parseInt(m[1], 16),
+                g: parseInt(m[2], 16),
+                b: parseInt(m[3], 16)
+            };
+        }
+
+        function darkenHex(hex, percent) {
+            const rgb = hexToRgb(hex);
+            const r = Math.max(0, Math.floor(rgb.r * (1 - percent / 100)));
+            const g = Math.max(0, Math.floor(rgb.g * (1 - percent / 100)));
+            const b = Math.max(0, Math.floor(rgb.b * (1 - percent / 100)));
+            return `rgb(${r},${g},${b})`;
+        }
+
+        /* ── 3D Projection Pipeline ── */
+        const LIGHT_DIR = { x: 0.45, y: -0.8, z: -0.4 };
+        const lightLen = Math.sqrt(LIGHT_DIR.x*LIGHT_DIR.x + LIGHT_DIR.y*LIGHT_DIR.y + LIGHT_DIR.z*LIGHT_DIR.z);
+        LIGHT_DIR.x /= lightLen; LIGHT_DIR.y /= lightLen; LIGHT_DIR.z /= lightLen;
+
+        function project3D(x, y, z, rotX, rotY, rotZ, scale, ox, oy) {
+            let x1 = x * Math.cos(rotZ) - y * Math.sin(rotZ);
+            let y1 = x * Math.sin(rotZ) + y * Math.cos(rotZ);
+            let z1 = z;
+
+            let x2 = x1;
+            let y2 = y1 * Math.cos(rotX) - z1 * Math.sin(rotX);
+            let z2 = y1 * Math.sin(rotX) + z1 * Math.cos(rotX);
+
+            let x3 = x2 * Math.cos(rotY) + z2 * Math.sin(rotY);
+            let y3 = y2;
+            let z3 = -x2 * Math.sin(rotY) + z2 * Math.cos(rotY);
+
+            const d = 450;
+            const perspective = d / (d + z3);
+            
+            return {
+                x: x3 * scale * perspective + ox,
+                y: y3 * scale * perspective + oy,
+                z: z3
+            };
+        }
+
+        let polygonsToDraw = [];
+
+        function push3DPolygon(points3D, rotX, rotY, rotZ, scale, ox, oy, baseColor, isDoubleSided = false) {
+            if (points3D.length < 3) return;
+            let projected = points3D.map(p => project3D(p.x, p.y, p.z, rotX, rotY, rotZ, scale, ox, oy));
+            
+            const v1 = { x: points3D[1].x - points3D[0].x, y: points3D[1].y - points3D[0].y, z: points3D[1].z - points3D[0].z };
+            const v2 = { x: points3D[2].x - points3D[0].x, y: points3D[2].y - points3D[0].y, z: points3D[2].z - points3D[0].z };
+            
+            let nx = v1.y * v2.z - v1.z * v2.y;
+            let ny = v1.z * v2.x - v1.x * v2.z;
+            let nz = v1.x * v2.y - v1.y * v2.x;
+            
+            const nLen = Math.sqrt(nx*nx + ny*ny + nz*nz);
+            if (nLen > 0) { nx /= nLen; ny /= nLen; nz /= nLen; }
+
+            if (!isDoubleSided && nz > 0) return;
+
+            let dot = nx * LIGHT_DIR.x + ny * LIGHT_DIR.y + nz * LIGHT_DIR.z;
+            let lightFactor = 0.55 + 0.45 * Math.max(0, -dot);
+
+            let avgZ = 0;
+            projected.forEach(p => avgZ += p.z);
+            avgZ /= projected.length;
+
+            polygonsToDraw.push({
+                points: projected,
+                z: avgZ,
+                baseColor: baseColor,
+                lightFactor: lightFactor
+            });
+        }
+
+        /* ── 3D Volumetric Geometric Primitives ── */
+        function push3DHexPrism(rotX, rotY, rotZ, scale, ox, oy, r1, r2, height, baseColor) {
+            const sides = 6;
+            let bottomRing = [];
+            let topRing = [];
+            for (let i = 0; i < sides; i++) {
+                const angle = (i / sides) * Math.PI * 2;
+                bottomRing.push({ x: Math.cos(angle) * r1, y: 0, z: Math.sin(angle) * r1 });
+                topRing.push({ x: Math.cos(angle) * r2, y: -height, z: Math.sin(angle) * r2 });
+            }
+
+            for (let i = 0; i < sides; i++) {
+                const next = (i + 1) % sides;
+                push3DPolygon([
+                    bottomRing[i], bottomRing[next], topRing[next], topRing[i]
+                ], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+            }
+            
+            push3DPolygon(topRing, rotX, rotY, rotZ, scale, ox, oy, baseColor);
+            push3DPolygon(bottomRing.slice().reverse(), rotX, rotY, rotZ, scale, ox, oy, baseColor);
+        }
+
+        function push3DBox(rotX, rotY, rotZ, scale, ox, oy, w, h, d, baseColor) {
+            const x = w/2, y = h/2, z = d/2;
+            const vertices = [
+                {x: -x, y: -y, z: -z}, {x: x, y: -y, z: -z}, {x: x, y: y, z: -z}, {x: -x, y: y, z: -z},
+                {x: -x, y: -y, z: z},  {x: x, y: -y, z: z},  {x: x, y: y, z: z},  {x: -x, y: y, z: z}
+            ];
+
+            push3DPolygon([vertices[0], vertices[1], vertices[2], vertices[3]], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+            push3DPolygon([vertices[5], vertices[4], vertices[7], vertices[6]], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+            push3DPolygon([vertices[4], vertices[0], vertices[3], vertices[7]], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+            push3DPolygon([vertices[1], vertices[5], vertices[6], vertices[2]], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+            push3DPolygon([vertices[4], vertices[5], vertices[1], vertices[0]], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+            push3DPolygon([vertices[3], vertices[2], vertices[6], vertices[7]], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+        }
+
+        function push3DLowPolySphere(rotX, rotY, rotZ, scale, ox, oy, radius, segments, baseColor) {
+            let rings = [];
+            const rows = segments;
+            const cols = segments * 2;
+            for (let r = 0; r <= rows; r++) {
+                let ring = [];
+                const lat = (r / rows) * Math.PI;
+                for (let c = 0; c < cols; c++) {
+                    const lon = (c / cols) * Math.PI * 2;
+                    ring.push({
+                        x: Math.sin(lat) * Math.cos(lon) * radius,
+                        y: -Math.cos(lat) * radius,
+                        z: Math.sin(lat) * Math.sin(lon) * radius
+                    });
+                }
+                rings.push(ring);
+            }
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const nextC = (c + 1) % cols;
+                    push3DPolygon([
+                        rings[r][c], rings[r][nextC], rings[r+1][nextC], rings[r+1][c]
+                    ], rotX, rotY, rotZ, scale, ox, oy, baseColor);
+                }
+            }
         }
 
         /* ── Sky, sun, clouds, birds ── */
@@ -1210,369 +1439,262 @@
             ctx.restore();
         }
 
-        /* ── Hills ── */
-        function drawHills() {
+        /* ── Volumetric Hills & Perspective Ground ── */
+        function draw3DHills() {
             const GY = H * .58;
-            [[.74, '#A5D6A7', 1.1, .065, .05], [.85, '#66BB6A', 1.4, .048, .033], [.94, '#43A047', 1.8, .032, .022]].forEach(([yf, col, freq, amp1, amp2]) => {
-                ctx.fillStyle = col;
-                ctx.beginPath();
-                for (let i = 0; i <= 22; i++) {
-                    const x = (i / 22) * W;
-                    const y = H * yf + Math.sin(i * freq + .8) * H * amp1 + Math.sin(i * (freq * .4) + 2) * H * amp2;
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            const HILL_RANGES = [
+                { yBase: H * 0.74, height: H * 0.08, col: '#81C784', zDepth: 250, spacing: 50 },
+                { yBase: H * 0.83, height: H * 0.06, col: '#4CAF50', zDepth: 180, spacing: 40 },
+                { yBase: H * 0.90, height: H * 0.04, col: '#2E7D32', zDepth: 100, spacing: 30 }
+            ];
+
+            HILL_RANGES.forEach((range) => {
+                const cols = Math.ceil(W / range.spacing) + 1;
+                let vertices = [];
+                for (let i = 0; i <= cols; i++) {
+                    const x = i * range.spacing;
+                    const hIndex = (i * 17 + range.zDepth) % RND.length;
+                    const peak = Math.sin(i * 1.2 + range.zDepth) * range.height * 0.7 + RND[hIndex] * range.height * 0.3;
+                    vertices.push({ x: x, y: range.yBase - peak, z: range.zDepth });
                 }
-                ctx.lineTo(W, H * .6); ctx.lineTo(0, H * .6); ctx.fill();
+
+                for (let i = 0; i < cols; i++) {
+                    const next = i + 1;
+                    push3DPolygon([
+                        { x: vertices[i].x, y: GY, z: range.zDepth },
+                        { x: vertices[i].x, y: vertices[i].y, z: range.zDepth },
+                        { x: vertices[next].x, y: GY, z: range.zDepth }
+                    ], 0, 0, 0, 1, 0, 0, range.col, true);
+                    
+                    push3DPolygon([
+                        { x: vertices[i].x, y: vertices[i].y, z: range.zDepth },
+                        { x: vertices[next].x, y: vertices[next].y, z: range.zDepth },
+                        { x: vertices[next].x, y: GY, z: range.zDepth }
+                    ], 0, 0, 0, 1, 0, 0, range.col, true);
+                }
             });
         }
 
-        /* ── Ground base ── */
-        function drawGround() {
+        function draw3DGroundPlanes() {
             const GY = H * .58;
-            const g = ctx.createLinearGradient(0, GY, 0, H);
-            g.addColorStop(0, '#6D4C41'); g.addColorStop(1, '#3E2723');
-            ctx.fillStyle = g;
-            ctx.fillRect(0, GY, W, H - GY);
-            // Zone dividers
-            [1, 2, 3, 4].forEach(i => {
-                ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(W / 5 * i, GY); ctx.lineTo(W / 5 * i, H); ctx.stroke();
+            const ZW = W / 5;
+            const ZONES = [
+                { name: 'Paddy', col: '#A5D6A7', col2: '#66BB6A', dx: 0 },
+                { name: 'Veggies', col: '#5D4037', col2: '#3E2723', dx: 1 },
+                { name: 'Sunflowers', col: '#6D4C41', col2: '#4E342E', dx: 2 },
+                { name: 'Wheat', col: '#8D6E63', col2: '#5D4037', dx: 3 },
+                { name: 'Fruits', col: '#388E3C', col2: '#1B5E20', dx: 4 }
+            ];
+
+            ZONES.forEach(z => {
+                const xL = ZW * z.dx;
+                const xR = ZW * (z.dx + 1);
+
+                const corners = [
+                    { x: xL, y: GY, z: 120 },
+                    { x: xR, y: GY, z: 120 },
+                    { x: xR, y: H, z: 0 },
+                    { x: xL, y: H, z: 0 }
+                ];
+                
+                push3DPolygon(corners, 0, 0, 0, 1, 0, 0, z.col, true);
+
+                const furrows = 4;
+                for (let f = 1; f < furrows; f++) {
+                    const t = f / furrows;
+                    const fxL = xL + (xR - xL) * t;
+                    push3DPolygon([
+                        { x: fxL - 1, y: GY, z: 120 },
+                        { x: fxL + 1, y: GY, z: 120 },
+                        { x: fxL + 1, y: H, z: 0 },
+                        { x: fxL - 1, y: H, z: 0 }
+                    ], 0, 0, 0, 1, 0, 0, z.col2, true);
+                }
             });
         }
 
-        /* ── Crop zones ── */
-        const GYF = .58;
-
-        function drawPaddyZone(zx, zy, zw, zh) {
-            const g = ctx.createLinearGradient(0, zy, 0, zy + zh);
-            g.addColorStop(0, '#A5D6A7'); g.addColorStop(1, '#66BB6A');
-            ctx.fillStyle = g; ctx.fillRect(zx, zy, zw, zh);
-            // water shimmer rows
-            for (let i = 0; i < 4; i++) {
-                const ly = zy + zh * (.12 + i * .2);
-                ctx.strokeStyle = `rgba(80,190,220,${.07 + Math.sin(t * 1.4 + i) * .035})`;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(zx, ly); ctx.lineTo(zx + zw, ly); ctx.stroke();
-            }
-            // rice stalks
-            for (let r = 0; r < 5; r++) {
-                for (let c = 0; c < Math.floor(zw / 26) + 1; c++) {
-                    const sx = zx + (c / (Math.floor(zw / 26) + 1)) * zw + zw / (Math.floor(zw / 26) + 1) / 2;
-                    const sy = zy + zh * .1 + (r / 5) * zh * .76;
-                    const sh = zh * .145, sw = Math.sin(t * .8 + c * .65 + r * .5) * 2.8;
-                    ctx.strokeStyle = '#2E7D32'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.moveTo(sx, sy + sh);
-                    ctx.quadraticCurveTo(sx + sw * .5, sy + sh * .5, sx + sw, sy); ctx.stroke();
-                    // grain ears
-                    ctx.strokeStyle = '#81C784'; ctx.lineWidth = 1.2;
-                    for (let g2 = -1; g2 <= 1; g2++) {
-                        ctx.beginPath(); ctx.moveTo(sx + sw, sy); ctx.lineTo(sx + sw + g2 * 4, sy - 5.5); ctx.stroke();
-                    }
-                }
-            }
-            zoneLabel(zx, zy, zw, zh, 'Paddy');
-        }
-
-        function drawVeggieZone(zx, zy, zw, zh) {
-            ctx.fillStyle = '#4E342E'; ctx.fillRect(zx, zy, zw, zh);
-            for (let r = 0; r < 6; r++) {
-                const ry = zy + zh * .07 + (r / 6) * zh * .87;
-                ctx.fillStyle = r % 2 ? '#3E2723' : '#5D4037';
-                ctx.fillRect(zx, ry, zw, zh / 7.2);
-            }
-            const vc = ['#E53935', '#FF7043', '#8BC34A', '#F57F17', '#7B1FA2', '#00897B'];
-            const cols = Math.floor(zw / 24) + 1;
-            for (let r = 0; r < 5; r++) {
+        /* ── Volumetric 3D Crop Zone Renderers ── */
+        function draw3DPaddyZone(zx, zy, zw, zh) {
+            const GY = H * .58;
+            const cs = Math.max(0.48, Math.min(1.1, W / 1100));
+            const rows = 4;
+            for (let r = 0; r < rows; r++) {
+                const zDepth = 15 + r * 28;
+                const rowY = GY + zh * (zDepth / 120);
+                const cols = Math.floor(zw / 22);
+                
                 for (let c = 0; c < cols; c++) {
-                    const vx = zx + (c / cols) * zw + zw / (cols * 2), vy = zy + zh * .13 + (r / 5) * zh * .74;
-                    const co = vc[(r * cols + c) % vc.length];
-                    ctx.fillStyle = '#388E3C';
-                    ctx.beginPath(); ctx.ellipse(vx - 4, vy - 1.5, 4, 2.2, -0.4, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.ellipse(vx + 3.5, vy - 2.5, 3.5, 2, .4, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = co;
-                    ctx.beginPath(); ctx.arc(vx + .5, vy + 1, 3.8, 0, Math.PI * 2); ctx.fill();
+                    const sx = zx + (c / cols) * zw + zw / (cols * 2);
+                    const stalkH = zh * 0.16 * cs;
+                    const sway = Math.sin(t * 0.8 + c * 0.65 + r * 0.5) * 0.1;
+                    
+                    push3DHexPrism(0, sway, 0, 0.7 * cs, sx, rowY, 1.5, 1, stalkH, '#2E7D32');
                 }
             }
-            zoneLabel(zx, zy, zw, zh, 'Veggies');
         }
 
-        function drawSunflowerZone(zx, zy, zw, zh) {
-            ctx.fillStyle = '#6D4C41'; ctx.fillRect(zx, zy, zw, zh);
+        function draw3DVeggieZone(zx, zy, zw, zh) {
+            const GY = H * .58;
+            const cs = Math.max(0.48, Math.min(1.1, W / 1100));
+            const rows = 3;
+            for (let r = 0; r < rows; r++) {
+                const zDepth = 20 + r * 35;
+                const rowY = GY + zh * (zDepth / 120);
+                
+                push3DHexPrism(0, 0, 0, 1 * cs, zx + zw/2, rowY, zw * 0.45, zw * 0.4, 8 * cs, '#4E342E');
+                
+                const vegCount = 4;
+                const colors = ['#E53935', '#FF7043', '#7B1FA2'];
+                for (let v = 0; v < vegCount; v++) {
+                    const vx = zx + (v / vegCount) * zw + zw / (vegCount * 2);
+                    const vCol = colors[(r * vegCount + v) % colors.length];
+                    
+                    push3DBox(0, 0, 0, 0.8 * cs, vx, rowY - 6 * cs, 12, 6, 12, '#388E3C');
+                    push3DLowPolySphere(0, t, 0, 1 * cs, vx, rowY - 10 * cs, 4.5, 3, vCol);
+                }
+            }
+        }
+
+        function draw3DSunflowerZone(zx, zy, zw, zh) {
+            const GY = H * .58;
+            const cs = Math.max(0.48, Math.min(1.1, W / 1100));
             const n = Math.max(5, Math.floor(zw / 38));
             for (let i = 0; i < n; i++) {
                 const fx = zx + (i / n) * zw + zw / (n * 2);
-                const fh = zh * (.46 + RND[i + 50] * .2);
-                const sw = Math.sin(t * .65 + i * .82) * 6;
-                ctx.strokeStyle = '#558B2F'; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.moveTo(fx, zy + zh);
-                ctx.quadraticCurveTo(fx + sw * .4, zy + zh - fh * .5, fx + sw, zy + zh - fh); ctx.stroke();
-                // leaves
-                ctx.fillStyle = '#689F38';
-                ctx.beginPath(); ctx.ellipse(fx + sw * .38 - 9, zy + zh - fh * .44, 10, 4.5, -.55, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(fx + sw * .6 + 9, zy + zh - fh * .62, 10, 4.5, .55, 0, Math.PI * 2); ctx.fill();
-                // flower
-                const hx = fx + sw, hy = zy + zh - fh, fr = zh * .057;
-                ctx.fillStyle = '#FFC107';
-                for (let p = 0; p < 13; p++) {
-                    const pa = (p / 13) * Math.PI * 2 + t * .06;
-                    ctx.beginPath();
-                    ctx.ellipse(hx + Math.cos(pa) * fr * 1.55, hy + Math.sin(pa) * fr * 1.55, fr * .48, fr * .23, pa, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                const cg = ctx.createRadialGradient(hx, hy, 0, hx, hy, fr);
-                cg.addColorStop(0, '#5D4037'); cg.addColorStop(1, '#3E2723');
-                ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(hx, hy, fr, 0, Math.PI * 2); ctx.fill();
+                const zDepth = 15 + (i * 22) % 85;
+                const perspectiveHeight = zh * (0.42 + (i % 2) * 0.15) * cs;
+                const ox = fx;
+                const oy = GY + zh * (zDepth / 120);
+                const sway = Math.sin(t * 0.65 + i * 0.82) * 0.08;
+
+                push3DHexPrism(0, sway, 0, 1 * cs, ox, oy, 3, 2, perspectiveHeight, '#558B2F');
+
+                const topY = oy - perspectiveHeight;
+                push3DBox(0.2, sway + 0.5, 0, 1 * cs, ox - 6 * cs, topY + 20 * cs, 8, 3, 8, '#689F38');
+                push3DBox(-0.2, sway - 0.5, 0, 1 * cs, ox + 6 * cs, topY + 30 * cs, 8, 3, 8, '#689F38');
+
+                push3DHexPrism(0.4, sway, 0.1, 1.2 * cs, ox + Math.sin(sway)*10*cs, topY, 9, 7, 4, '#3E2723');
+                push3DHexPrism(0.4, sway, 0.1, 1.4 * cs, ox + Math.sin(sway)*10*cs, topY - 2*cs, 12, 10, 2, '#FFC107');
             }
-            zoneLabel(zx, zy, zw, zh, 'Sunflowers');
         }
 
-        function drawWheatZone(zx, zy, zw, zh) {
-            ctx.fillStyle = '#8D6E63'; ctx.fillRect(zx, zy, zw, zh);
-            const n = Math.max(10, Math.floor(zw / 22));
+        function draw3DWheatZone(zx, zy, zw, zh) {
+            const GY = H * .58;
+            const cs = Math.max(0.48, Math.min(1.1, W / 1100));
+            const n = Math.max(10, Math.floor(zw / 24));
             for (let i = 0; i < n; i++) {
-                const wx = zx + (i / n) * zw + zw / (n * 2) + (RND[i + 80] - .5) * 3.5;
-                const wh = zh * (.47 + RND[i + 90] * .28);
-                const sw = Math.sin(t * .95 + i * .52) * 9;
-                ctx.strokeStyle = '#C8A84B'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(wx, zy + zh);
-                ctx.quadraticCurveTo(wx + sw * .4, zy + zh - wh * .5, wx + sw, zy + zh - wh); ctx.stroke();
-                const hx = wx + sw, hy = zy + zh - wh;
-                for (let k = 0; k < 5; k++) {
-                    const ka = (k - 2) * .25;
-                    ctx.strokeStyle = '#D4A843'; ctx.lineWidth = 1.4;
-                    ctx.beginPath(); ctx.moveTo(hx, hy - k * 5); ctx.lineTo(hx + Math.sin(ka) * 7, hy - k * 5 - 5.5); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(hx, hy - k * 5); ctx.lineTo(hx - Math.sin(ka) * 7, hy - k * 5 - 5.5); ctx.stroke();
+                const wx = zx + (i / n) * zw + zw / (n * 2);
+                const zDepth = 10 + (i * 13) % 95;
+                const perspectiveHeight = zh * (0.35 + (i % 3) * 0.12) * cs;
+                const swayX = Math.sin(t * 0.95 + i * 0.52) * 0.12;
+                
+                const segments = 4;
+                const segH = perspectiveHeight / segments;
+                let curY = GY + zh * (zDepth / 120);
+                let curX = wx;
+                
+                for (let s = 0; s < segments; s++) {
+                    const nextX = curX + swayX * segH;
+                    const nextY = curY - segH;
+                    
+                    push3DHexPrism(0, swayX, 0, 1 * cs, curX, curY, 1.8, 1.4, segH, '#C8A84B');
+                    
+                    if (s === segments - 1) {
+                        push3DHexPrism(swayX, 0, 0, 1 * cs, nextX, nextY, 3, 0.5, 12 * cs, '#D4A843');
+                    }
+                    curX = nextX;
+                    curY = nextY;
                 }
             }
-            zoneLabel(zx, zy, zw, zh, 'Wheat');
         }
 
-        function drawFruitZone(zx, zy, zw, zh) {
-            ctx.fillStyle = '#388E3C'; ctx.fillRect(zx, zy, zw, zh);
-            const fc = ['#F57F17', '#E53935', '#FF8F00', '#C62828', '#4CAF50'];
-            const nt = Math.max(3, Math.floor(zw / 60));
-            for (let i = 0; i < nt; i++) {
-                const tx = zx + (i / nt) * zw + zw / (nt * 2);
-                const th = zh * .7, sw = Math.sin(t * .48 + i * 1.2) * 3.5;
-                ctx.fillStyle = '#5D4037';
-                ctx.fillRect(tx - 5.5, zy + zh - th * .36, 11, th * .36);
-                [[.57, .155, '#1B5E20'], [.65, .135, '#2E7D32'], [.74, .115, '#388E3C']].forEach(([yf, cr, col]) => {
-                    ctx.fillStyle = col; ctx.beginPath();
-                    ctx.arc(tx + sw, zy + zh - th * yf, zh * cr, 0, Math.PI * 2); ctx.fill();
+        function draw3DFruitZone(zx, zy, zw, zh) {
+            const GY = H * .58;
+            const cs = Math.max(0.48, Math.min(1.1, W / 1100));
+            const treeCount = Math.max(2, Math.floor(zw / 70));
+            for (let i = 0; i < treeCount; i++) {
+                const tx = zx + (i / treeCount) * zw + zw / (treeCount * 2);
+                const zDepth = 30 + (i * 35) % 75;
+                const treeH = zh * 0.65 * cs;
+                const ox = tx;
+                const oy = GY + zh * (zDepth / 120);
+
+                push3DHexPrism(0, 0, 0, 1 * cs, ox, oy, 7, 5, treeH * 0.4, '#5D4037');
+
+                const foliageY = oy - treeH * 0.4;
+                push3DLowPolySphere(0, t*0.2, 0, 1 * cs, ox, foliageY - 10 * cs, 22, 4, '#1B5E20');
+                push3DLowPolySphere(0, -t*0.15, 0, 1 * cs, ox - 10 * cs, foliageY - 22 * cs, 16, 4, '#2E7D32');
+                push3DLowPolySphere(0, t*0.25, 0, 1 * cs, ox + 10 * cs, foliageY - 20 * cs, 15, 4, '#388E3C');
+
+                const fruits = [
+                    {dx: -12, dy: -8, dz: 10, col: '#E53935'},
+                    {dx: 10, dy: -14, dz: -8, col: '#FF8F00'},
+                    {dx: 2, dy: -5, dz: 12, col: '#C62828'},
+                    {dx: -5, dy: -18, dz: -6, col: '#E53935'}
+                ];
+                fruits.forEach(f => {
+                    push3DLowPolySphere(0, 0, 0, 1 * cs, ox + f.dx * cs, foliageY + f.dy * cs, 3, 2, f.col);
                 });
-                for (let f = 0; f < 6; f++) {
-                    const fa = (f / 6) * Math.PI * 2 + t * .05;
-                    const fr = zh * .092;
-                    ctx.fillStyle = fc[f % fc.length];
-                    ctx.beginPath();
-                    ctx.arc(tx + sw + Math.cos(fa) * fr, zy + zh - th * .65 + Math.sin(fa) * fr * .55, zh * .027, 0, Math.PI * 2);
-                    ctx.fill();
-                }
             }
-            zoneLabel(zx, zy, zw, zh, 'Fruits');
         }
 
-        function zoneLabel(zx, zy, zw, zh, text) {
-            const fs = Math.max(9, zw * .088);
-            ctx.fillStyle = 'rgba(255,255,255,.82)';
-            ctx.font = `600 ${fs}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillText(text, zx + zw / 2, zy + zh - 10);
-        }
-
-        /* ── Farmer drawing ── */
+        /* ── Volumetric 3D Humans drawing ── */
         const SKIN = '#8B5E3C';
-
-        function drawTool(sx, sy, s, tool) {
-            ctx.save(); ctx.translate(sx, sy);
-            if (tool === 'hoe') {
-                ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2.5 * s; ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(8 * s, 18 * s); ctx.stroke();
-                rrect(-3 * s, -8 * s, 13 * s, 6 * s, 1.5 * s);
-                ctx.fillStyle = '#607D8B'; ctx.fill();
-            } else if (tool === 'sickle') {
-                ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2.5 * s; ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(4 * s, 15 * s); ctx.stroke();
-                ctx.strokeStyle = '#78909C'; ctx.lineWidth = 2.5 * s;
-                ctx.beginPath(); ctx.arc(5 * s, -6 * s, 9 * s, .25, Math.PI * 1.5); ctx.stroke();
-            } else if (tool === 'basket') {
-                const bg = ctx.createLinearGradient(-9 * s, -9 * s, 9 * s, 3 * s);
-                bg.addColorStop(0, '#A1887F'); bg.addColorStop(1, '#6D4C41');
-                ctx.fillStyle = bg;
-                ctx.beginPath(); ctx.ellipse(0, -4 * s, 9 * s, 6.5 * s, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 1.3 * s;
-                ctx.beginPath(); ctx.arc(0, -4 * s, 9 * s, Math.PI, 0); ctx.stroke();
-                ctx.strokeStyle = 'rgba(0,0,0,.1)'; ctx.lineWidth = .8 * s;
-                [-4.5, 0, 4.5].forEach(dx => {
-                    ctx.beginPath(); ctx.moveTo(dx * s, -10 * s); ctx.lineTo(dx * s, -0 * s); ctx.stroke();
-                });
-            } else if (tool === 'sheaf') {
-                ctx.fillStyle = '#C8A84B';
-                ctx.beginPath(); rrect(-5.5 * s, -15 * s, 11 * s, 16 * s, 1 * s); ctx.fill();
-                ctx.fillStyle = '#6D4C41'; ctx.fillRect(-7 * s, -11 * s, 14 * s, 3 * s);
-                ctx.strokeStyle = '#D4A843'; ctx.lineWidth = 1.3 * s;
-                [-4, -1.5, 1.5, 4].forEach(dx => {
-                    ctx.beginPath(); ctx.moveTo(dx * s, -15 * s); ctx.lineTo(dx * s + .8, -23 * s); ctx.stroke();
-                });
-            } else if (tool === 'pluck') {
-                ctx.fillStyle = SKIN;
-                ctx.beginPath(); ctx.arc(0, -12 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        function drawMaleFarmer(f, s) {
-            const cx = f.x, cy = f.y;
-            const lean = f.state === 'work' ? .28 : 0;
-            const armSw = f.state === 'work' ? Math.sin(f.phase + t * 2.1) * 9 : 2;
-
-            ctx.save();
-            // shadow
-            ctx.save(); ctx.translate(cx, cy); ctx.scale(1, .3);
-            ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath();
-            ctx.ellipse(0, 0, 15 * s, 7 * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-
-            ctx.translate(cx, cy); ctx.rotate(lean);
-
-            // dhoti
-            ctx.fillStyle = '#F0EDE0';
-            ctx.beginPath(); ctx.moveTo(-13 * s, 0); ctx.lineTo(13 * s, 0);
-            ctx.lineTo(10 * s, -29 * s); ctx.lineTo(-10 * s, -29 * s); ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(0,0,0,.06)'; ctx.lineWidth = .7; ctx.stroke();
-            ctx.strokeStyle = 'rgba(0,0,0,.06)'; ctx.lineWidth = .5;
-            ctx.beginPath(); ctx.moveTo(0, -29 * s); ctx.lineTo(0, 0); ctx.stroke();
-
-            // kurta
-            ctx.fillStyle = f.kurta;
-            rrect(-9.5 * s, -60 * s, 19 * s, 33 * s, 3 * s); ctx.fill();
-            ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 1.5 * s;
-            ctx.beginPath(); ctx.moveTo(0, -60 * s); ctx.lineTo(0, -50 * s); ctx.stroke();
-
-            // arms
-            ctx.strokeStyle = SKIN; ctx.lineWidth = 4.8 * s; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(-9.5 * s, -53 * s); ctx.lineTo(-22 * s, -40 * s - armSw * .5); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(9.5 * s, -53 * s); ctx.lineTo(21 * s, -34 * s + armSw); ctx.stroke();
-            drawTool(21 * s, -34 * s + armSw, s, f.tool);
-
-            // neck
-            ctx.fillStyle = SKIN; ctx.fillRect(-3.5 * s, -67 * s, 7 * s, 9 * s);
-
-            // head
-            ctx.fillStyle = SKIN; ctx.beginPath(); ctx.arc(0, -76 * s, 10.5 * s, 0, Math.PI * 2); ctx.fill();
-
-            // face
+        function draw3DFarmer(f, s) {
+            const ox = f.x;
+            const oy = f.y;
+            
             if (f.state === 'look') {
-                ctx.fillStyle = '#2C1810';
-                ctx.beginPath(); ctx.arc(-3.8 * s, -77.5 * s, 1.8 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(3.8 * s, -77.5 * s, 1.8 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#2C1810'; ctx.lineWidth = 1.7 * s;
-                ctx.beginPath(); ctx.arc(0, -74 * s, 4.2 * s, .22, Math.PI - .22); ctx.stroke();
-                ctx.strokeStyle = '#1A0A00'; ctx.lineWidth = 1.5 * s;
-                ctx.beginPath(); ctx.moveTo(-4.5 * s, -76.5 * s); ctx.quadraticCurveTo(0, -78.5 * s, 4.5 * s, -76.5 * s); ctx.stroke();
+                f.rotY = Math.sin(t * 1.5 + f.phase) * 0.45;
             } else {
-                ctx.fillStyle = '#5D3B1A';
-                ctx.beginPath(); ctx.arc(-3.5 * s, -77 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(3.5 * s, -77 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#5D3B1A'; ctx.lineWidth = 1.3 * s;
-                ctx.beginPath(); ctx.moveTo(-3 * s, -73.5 * s); ctx.quadraticCurveTo(0, -75 * s, 3 * s, -73.5 * s); ctx.stroke();
+                f.rotY = Math.sin(t * 0.6 + f.phase) * 0.15;
             }
 
-            // turban
-            ctx.fillStyle = f.turban;
-            ctx.beginPath(); ctx.ellipse(0, -83 * s, 13.5 * s, 8.5 * s, 0, 0, Math.PI * 2); ctx.fill();
-            [1, 2, 3, 4].forEach(i => {
-                ctx.strokeStyle = 'rgba(0,0,0,.1)'; ctx.lineWidth = .8 * s;
-                ctx.beginPath(); ctx.arc(0, -81 * s, (10.5 + i * 1.4) * s, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
-            });
-            ctx.fillStyle = darkenHex(f.turban, 25);
-            ctx.beginPath(); ctx.arc(12.5 * s, -81 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = lightenHex(f.turban, 40);
-            ctx.beginPath(); ctx.arc(12.5 * s, -81 * s, 1.8 * s, 0, Math.PI * 2); ctx.fill();
+            const leanX = f.state === 'work' ? 0.28 : 0;
+            const armSwing = f.state === 'work' ? Math.sin(f.phase + t * 2.2) * 0.6 : 0.05;
 
-            ctx.restore();
-        }
+            const bodyCol = f.kurta || f.saree;
+            push3DHexPrism(leanX, f.rotY, 0, s, ox, oy - 25*s, 11, 8.5, 27, bodyCol);
 
-        function drawFemaleFarmer(f, s) {
-            const cx = f.x, cy = f.y;
-            const lean = f.state === 'work' ? .2 : 0;
-            const armSw = f.state === 'work' ? Math.sin(f.phase + t * 1.9) * 7 : 2;
+            push3DLowPolySphere(leanX, f.rotY, 0, s, ox, oy - 62*s, 9, 3, SKIN);
 
-            ctx.save();
-            ctx.save(); ctx.translate(cx, cy); ctx.scale(1, .3);
-            ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.beginPath();
-            ctx.ellipse(0, 0, 13 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-
-            ctx.translate(cx, cy); ctx.rotate(lean);
-
-            // saree bottom
-            ctx.fillStyle = f.saree;
-            ctx.beginPath(); ctx.moveTo(-13.5 * s, 0); ctx.lineTo(13.5 * s, 0);
-            ctx.lineTo(11.5 * s, -36 * s); ctx.lineTo(-11.5 * s, -36 * s); ctx.closePath(); ctx.fill();
-            // gold border
-            ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.8 * s;
-            ctx.beginPath(); ctx.moveTo(-13.5 * s, -3.5 * s); ctx.lineTo(13.5 * s, -3.5 * s); ctx.stroke();
-            ctx.fillStyle = '#FFD700';
-            for (let d = 0; d < 5; d++) { ctx.beginPath(); ctx.arc((-10 + d * 5) * s, -3.5 * s, 1.1 * s, 0, Math.PI * 2); ctx.fill(); }
-
-            // blouse
-            ctx.fillStyle = lightenHex(f.saree, 50);
-            rrect(-8.5 * s, -58 * s, 17 * s, 24 * s, 2.5 * s); ctx.fill();
-
-            // pallu
-            ctx.fillStyle = f.saree; ctx.globalAlpha = .72;
-            ctx.beginPath(); ctx.moveTo(-8.5 * s, -57 * s); ctx.lineTo(-21 * s, -43 * s);
-            ctx.lineTo(-16 * s, -36 * s); ctx.lineTo(-5 * s, -53 * s); ctx.closePath(); ctx.fill();
-            ctx.globalAlpha = 1;
-
-            // arms
-            ctx.strokeStyle = SKIN; ctx.lineWidth = 4.2 * s; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(-8.5 * s, -52 * s); ctx.lineTo(-20 * s, -40 * s - armSw * .5); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(8.5 * s, -52 * s); ctx.lineTo(19 * s, -36 * s + armSw); ctx.stroke();
-            // bangles
-            ['#FFD700', '#E53935', '#4CAF50'].forEach((bc, bi) => {
-                ctx.strokeStyle = bc; ctx.lineWidth = (bi === 0 ? 2 : 1.4) * s;
-                ctx.beginPath(); ctx.arc(-19.5 * s, -41 * s - armSw * .5, (2.5 + bi * .8) * s, 0, Math.PI * 2); ctx.stroke();
-            });
-            drawTool(19 * s, -36 * s + armSw, s, f.tool);
-
-            // neck
-            ctx.fillStyle = SKIN; ctx.fillRect(-3 * s, -65 * s, 6 * s, 9 * s);
-
-            // head
-            ctx.fillStyle = SKIN; ctx.beginPath(); ctx.arc(0, -74 * s, 9.5 * s, 0, Math.PI * 2); ctx.fill();
-
-            // face
-            if (f.state === 'look') {
-                ctx.fillStyle = '#2C1810';
-                ctx.beginPath(); ctx.arc(-3.2 * s, -75.5 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(3.2 * s, -75.5 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#2C1810'; ctx.lineWidth = 1.4 * s;
-                ctx.beginPath(); ctx.arc(0, -72 * s, 3.8 * s, .2, Math.PI - .2); ctx.stroke();
+            if (f.sex === 'm') {
+                push3DHexPrism(leanX, f.rotY, 0, s, ox, oy, 13, 10.5, 25, '#F0EDE0');
             } else {
-                ctx.fillStyle = '#5D3B1A';
-                ctx.beginPath(); ctx.arc(-3 * s, -75 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(3 * s, -75 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#5D3B1A'; ctx.lineWidth = 1.2 * s;
-                ctx.beginPath(); ctx.moveTo(-2.5 * s, -72 * s); ctx.quadraticCurveTo(0, -73.5 * s, 2.5 * s, -72 * s); ctx.stroke();
+                push3DHexPrism(leanX, f.rotY, 0, s, ox, oy, 14, 11, 28, f.saree);
+                push3DHexPrism(leanX, f.rotY, 0, s, ox, oy, 14.5, 14, 3, '#FFD700');
             }
 
-            // hair
-            ctx.fillStyle = '#1A0A00';
-            ctx.beginPath(); ctx.arc(0, -81 * s, 9.8 * s, Math.PI, 0); ctx.fill();
-            ctx.beginPath(); ctx.arc(8.5 * s, -79 * s, 4.5 * s, 0, Math.PI * 2); ctx.fill();
+            push3DHexPrism(leanX - armSwing*0.2, f.rotY, -0.4, s, ox - 10*s, oy - 50*s, 3.5, 2.5, 14, SKIN);
+            push3DHexPrism(leanX + armSwing*0.2, f.rotY, 0.4, s, ox + 10*s, oy - 50*s, 3.5, 2.5, 14, SKIN);
 
-            // head covering (saree pallu)
-            ctx.fillStyle = f.saree; ctx.globalAlpha = .52;
-            ctx.beginPath(); ctx.arc(0, -78 * s, 11.5 * s, Math.PI, 0); ctx.fill();
-            ctx.globalAlpha = 1;
+            if (f.sex === 'm') {
+                push3DHexPrism(leanX + 0.1, f.rotY, -0.1, s, ox, oy - 68*s, 13, 11.5, 7, f.turban);
+                push3DBox(leanX, f.rotY, 0, s, ox + 11*s, oy - 68*s, 4, 4, 4, darkenHex(f.turban, 30));
+            } else {
+                push3DBox(leanX + 0.1, f.rotY, 0, s, ox - 11*s, oy - 56*s, 4, 18, 5, f.saree);
+            }
 
-            // bindi
-            ctx.fillStyle = '#C62828'; ctx.beginPath(); ctx.arc(0, -75.5 * s, 1.4 * s, 0, Math.PI * 2); ctx.fill();
-            // nose ring
-            ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.1 * s;
-            ctx.beginPath(); ctx.arc(2.8 * s, -73.5 * s, 1.6 * s, 0, Math.PI * 2); ctx.stroke();
-
-            ctx.restore();
+            if (f.tool === 'hoe') {
+                const hx = ox + 16*s;
+                const hy = oy - 28*s + Math.sin(armSwing)*8*s;
+                push3DBox(0.4, f.rotY + 0.2, 0.5, s, hx, hy, 2.5, 45, 2.5, '#8B4513');
+                push3DBox(0.4, f.rotY + 0.2, 0.5, s, hx, hy - 20*s, 10, 2, 8, '#607D8B');
+            } else if (f.tool === 'sickle') {
+                const sx = ox + 16*s;
+                const sy = oy - 26*s + Math.sin(armSwing)*6*s;
+                push3DBox(-0.3, f.rotY, 0, s, sx, sy, 2, 12, 2, '#8B4513');
+                push3DBox(-0.3, f.rotY, 0, s, sx, sy - 8*s, 8, 2, 6, '#78909C');
+            } else if (f.tool === 'basket') {
+                const bx = ox - 2*s;
+                const by = oy - 10*s;
+                push3DHexPrism(leanX, f.rotY, 0.1, s, bx, by, 11, 7, 7, '#A1887F');
+            } else if (f.tool === 'sheaf') {
+                const shx = ox - 2*s;
+                const shy = oy - 8*s;
+                push3DHexPrism(leanX, f.rotY, 0, s, shx, shy, 8, 6.5, 12, '#C8A84B');
+                push3DBox(leanX, f.rotY, 0, s, shx, shy - 6*s, 14, 2, 14, '#6D4C41');
+            }
         }
 
         function drawBubble(f, s) {
@@ -1614,24 +1736,30 @@
             const GY = H * GYF;
             const ZW = W / 5;
 
+            // 1. Draw 2D background sky, sun, clouds, birds
             drawSky();
             drawSun();
 
             clouds.forEach(c => { drawCloud(c); c.x += c.spd; if (c.x > W + 160) c.x = -160; });
             birds.forEach(b => { drawBird(b); b.x += b.spd; if (b.x > W + 35) b.x = -35; });
 
-            drawHills();
-            drawGround();
+            // 2. Clear global 3D polygon buffer
+            polygonsToDraw = [];
 
-            // Crop zones (bottom to top render order)
-            drawPaddyZone(ZW * 0, GY, ZW, H - GY);
-            drawVeggieZone(ZW * 1, GY, ZW, H - GY);
-            drawSunflowerZone(ZW * 2, GY, ZW, H - GY);
-            drawWheatZone(ZW * 3, GY, ZW, H - GY);
-            drawFruitZone(ZW * 4, GY, ZW, H - GY);
+            // 3. Populate 3D volumetric ground and hills
+            draw3DHills();
+            draw3DGroundPlanes();
 
-            // Farmers
-            const s = Math.max(.42, Math.min(1.18, H / 700));
+            // 4. Populate 3D volumetric crops (bottom to top render order)
+            draw3DPaddyZone(ZW * 0, GY, ZW, H - GY);
+            draw3DVeggieZone(ZW * 1, GY, ZW, H - GY);
+            draw3DSunflowerZone(ZW * 2, GY, ZW, H - GY);
+            draw3DWheatZone(ZW * 3, GY, ZW, H - GY);
+            draw3DFruitZone(ZW * 4, GY, ZW, H - GY);
+
+            // 5. Populate 3D volumetric jointed farmers
+            const baseScale = Math.min(W / 1100, H / 760);
+            const s = Math.max(0.38, Math.min(1.15, baseScale * 1.1));
             farmers.forEach(f => {
                 f.x = f.xf * W; f.y = f.yf * H;
                 // timer logic
@@ -1643,9 +1771,41 @@
                     f.timer = 380 + Math.floor(Math.random() * 280);
                 }
                 if (f.state === 'look') { f.bubTimer--; if (f.bubTimer <= 0) f.state = 'work'; }
-                if (f.sex === 'm') drawMaleFarmer(f, s);
-                else drawFemaleFarmer(f, s);
-                if (f.state === 'look') drawBubble(f, s);
+                
+                // Call the unified 3D farmer drawing method
+                draw3DFarmer(f, s);
+            });
+
+            // 6. Global depth sort (Painter's algorithm)
+            polygonsToDraw.sort((a, b) => b.z - a.z);
+
+            // 7. Render 3D polygons with lighting-adjusted shading
+            polygonsToDraw.forEach(poly => {
+                const rgb = hexToRgb(poly.baseColor);
+                const r = Math.max(0, Math.min(255, Math.floor(rgb.r * poly.lightFactor)));
+                const g = Math.max(0, Math.min(255, Math.floor(rgb.g * poly.lightFactor)));
+                const b = Math.max(0, Math.min(255, Math.floor(rgb.b * poly.lightFactor)));
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                
+                ctx.beginPath();
+                ctx.moveTo(poly.points[0].x, poly.points[0].y);
+                for (let i = 1; i < poly.points.length; i++) {
+                    ctx.lineTo(poly.points[i].x, poly.points[i].y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                
+                // Premium anti-aliasing seam prevention stroke
+                ctx.strokeStyle = `rgb(${Math.max(0, r - 12)},${Math.max(0, g - 12)},${Math.max(0, b - 12)})`;
+                ctx.lineWidth = 0.45;
+                ctx.stroke();
+            });
+
+            // 8. Draw 2D speech bubbles on top
+            farmers.forEach(f => {
+                if (f.state === 'look') {
+                    drawBubble(f, s);
+                }
             });
 
             t += 0.016;
@@ -1658,25 +1818,65 @@
 
 
         /* ══════════════════════════════════════════════════════
-           BANNER CAROUSEL
+           PREMIUM FEATURED PRODUCTS - FRAME MOTIONS (3D TILT & OBSERVER)
            ══════════════════════════════════════════════════════ */
-        let curSlide = 0;
-        const slides = document.querySelectorAll('.lp-slide');
-        const dots = document.querySelectorAll('.lp-dot');
+        const prodCards = document.querySelectorAll('.lp-prod-card');
+        if (prodCards.length > 0) {
+            const prodObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const idx = Array.from(prodCards).indexOf(entry.target);
+                        setTimeout(() => {
+                            entry.target.classList.add('lp-animate-in');
+                        }, idx * 110);
+                        prodObserver.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.12,
+                rootMargin: '0px 0px -20px 0px'
+            });
 
-        function goSlide(n) {
-            slides[curSlide].classList.remove('lp-slide-active');
-            dots[curSlide].classList.remove('lp-dot-active');
-            curSlide = (n + slides.length) % slides.length;
-            slides[curSlide].classList.add('lp-slide-active');
-            dots[curSlide].classList.add('lp-dot-active');
+            prodCards.forEach(card => prodObserver.observe(card));
         }
 
-        let autoSlide = setInterval(() => goSlide(curSlide + 1), 3800);
+        prodCards.forEach((card) => {
+            const inner = card.querySelector('.lp-prod-inner');
+            const img = card.querySelector('.lp-prod-img, .lp-prod-fallback-emoji');
 
-        document.getElementById('lp-next').addEventListener('click', () => { clearInterval(autoSlide); goSlide(curSlide + 1); autoSlide = setInterval(() => goSlide(curSlide + 1), 3800); });
-        document.getElementById('lp-prev').addEventListener('click', () => { clearInterval(autoSlide); goSlide(curSlide - 1); autoSlide = setInterval(() => goSlide(curSlide + 1), 3800); });
-        dots.forEach(d => d.addEventListener('click', () => { clearInterval(autoSlide); goSlide(+d.dataset.slide); autoSlide = setInterval(() => goSlide(curSlide + 1), 3800); }));
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const xc = x / rect.width - 0.5;
+                const yc = y / rect.height - 0.5;
+
+                const rotateX = -yc * 16;
+                const rotateY = xc * 16;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.025, 1.025, 1.025)`;
+                
+                if (img) {
+                    img.style.transform = `translate3d(${-xc * 14}px, ${-yc * 14}px, 15px) scale(1.07)`;
+                }
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+                card.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+                
+                if (img) {
+                    img.style.transform = 'translate3d(0, 0, 0) scale(1)';
+                    img.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+                }
+            });
+
+            card.addEventListener('mouseenter', () => {
+                card.style.transition = 'none';
+                if (img) img.style.transition = 'none';
+            });
+        });
 
 
         /* ══════════════════════════════════════════════════════

@@ -311,7 +311,77 @@ def notify_order_placed(order, user):
 # ── Root ──────────────────────────────────────────────────────────────────────
 @app.route('/landing')
 def landing():
-    return render_template('landing.html')
+    conn = database.get_conn()
+    featured_products = []
+    try:
+        cur = conn.cursor()
+        # Fetch up to 4 in-stock, seasonal featured products with category information
+        cur.execute("""
+            SELECT p.*, c.name AS category_name, c.icon AS category_icon
+            FROM products p
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE p.stock_quantity > 0 AND p.seasonal_availability = 1
+            ORDER BY p.price DESC
+            LIMIT 4
+        """)
+        featured_products = database.dictfetchall(cur)
+        cur.close()
+    except Exception as e:
+        print(f"Database error in landing route: {e}")
+        featured_products = []
+    finally:
+        database.release_conn(conn)
+    
+    # Premium fallback data if database query returns empty (e.g. initial dev state or unseeded)
+    if not featured_products:
+        featured_products = [
+            {
+                'id': 1,
+                'name': 'Fresh Tomatoes',
+                'description': 'Juicy, sun-ripened tomatoes straight from the vine. Perfect for salads and curries.',
+                'price': 40.0,
+                'unit': 'kg',
+                'stock_quantity': 120,
+                'category_name': 'Vegetables',
+                'category_icon': '🍅',
+                'image': ''
+            },
+            {
+                'id': 4,
+                'name': 'Alphonso Mangoes',
+                'description': 'The king of mangoes — sweet, fiberless, and intensely aromatic.',
+                'price': 220.0,
+                'unit': 'dozen',
+                'stock_quantity': 50,
+                'category_name': 'Fruits',
+                'category_icon': '🍎',
+                'image': ''
+            },
+            {
+                'id': 7,
+                'name': 'Fresh Cow Milk',
+                'description': 'Farm-fresh A2 cow milk, collected every morning. No preservatives.',
+                'price': 70.0,
+                'unit': 'litre',
+                'stock_quantity': 60,
+                'category_name': 'Dairy',
+                'category_icon': '🥛',
+                'image': ''
+            },
+            {
+                'id': 9,
+                'name': 'Country Eggs',
+                'description': 'Free-range country eggs from desi hens. Rich orange yolks, full of nutrition.',
+                'price': 8.0,
+                'unit': 'piece',
+                'stock_quantity': 300,
+                'category_name': 'Eggs',
+                'category_icon': '🥚',
+                'image': ''
+            }
+        ]
+        
+    return render_template('landing.html', products=featured_products)
 
 
 @app.route('/')

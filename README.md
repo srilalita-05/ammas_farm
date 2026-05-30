@@ -61,8 +61,8 @@ cd ammas_farm
 pip install -r requirements.txt
 
 # 4. Set environment variables
-export DATABASE_URL="postgresql://user:password@host:port/database?sslmode=require"
-export SECRET_KEY="your-secret-key-here"
+$env:DATABASE_URL="postgresql://user:password@host:port/database?sslmode=require"
+$env:SECRET_KEY="your-secret-key-here"
 
 # 5. Seed demo data (creates DB schema + demo users + 12 products)
 python seed_data.py
